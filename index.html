@@ -361,6 +361,11 @@ body {
   display: inline-block;
   animation: blink 1s ease-in-out infinite;
 }
+.transcript-card h3 .live-dot.reconnecting {
+  display: inline-block;
+  background: #F6AD55;
+  animation: blink 0.4s ease-in-out infinite;
+}
 @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
 .transcript-text {
   font-size: 16px;
@@ -388,12 +393,9 @@ body {
 
 /* Bottom grid */
 .bottom-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 16px;
-}
-@media (max-width: 720px) {
-  .bottom-grid { grid-template-columns: 1fr; }
 }
 
 /* Filler breakdown */
@@ -477,156 +479,6 @@ body {
 .badge-name { font-size: 9px; color: var(--text-dim); line-height: 1.2; }
 .badge.earned .badge-name { color: var(--text); }
 
-/* ===== Bunny ===== */
-.bunny-card h3::before { content: ''; }
-.bunny-scene {
-  position: relative;
-  height: 200px;
-  border-radius: var(--radius-sm);
-  background: linear-gradient(180deg, #E6FFFA 0%, #F0FFF4 40%, #C6F6D5 100%);
-  overflow: hidden;
-  margin-bottom: 12px;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  border: 1px solid #B2F5EA;
-}
-.bunny-scene::before {
-  content: '';
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  height: 35%;
-  background: linear-gradient(180deg, transparent, rgba(154,230,180,.2));
-  border-radius: 50% 50% 0 0 / 20% 20% 0 0;
-}
-.bunny-scene::after {
-  content: '🌸 ✨ 🌷 ✨ 🌸';
-  position: absolute;
-  top: 8px; left: 0; right: 0;
-  text-align: center;
-  font-size: 10px;
-  letter-spacing: 24px;
-  opacity: .5;
-  pointer-events: none;
-}
-.bunny-img {
-  width: 120px; height: 120px;
-  object-fit: contain;
-  margin-bottom: 5px;
-  transition: transform .3s cubic-bezier(.34,1.56,.64,1);
-  filter: drop-shadow(0 6px 12px rgba(0,0,0,.15));
-  position: relative; z-index: 2;
-  animation: bunny-idle 3s ease-in-out infinite;
-}
-.bunny-img.eating { animation: bunny-eat .5s ease-in-out 3; }
-.bunny-img.happy { animation: bunny-happy .6s ease-in-out; }
-@keyframes bunny-idle {
-  0%,100% { transform: translateY(0) scale(1); }
-  50% { transform: translateY(-6px) scale(1.02); }
-}
-@keyframes bunny-eat {
-  0%,100% { transform: scale(1) rotate(0); }
-  25% { transform: scale(1.08) rotate(-3deg); }
-  75% { transform: scale(1.08) rotate(3deg); }
-}
-@keyframes bunny-happy {
-  0% { transform: scale(1) translateY(0); }
-  30% { transform: scale(1.2) translateY(-20px); }
-  60% { transform: scale(1.1) translateY(-10px); }
-  100% { transform: scale(1) translateY(0); }
-}
-
-.happiness-bar {
-  display: flex; align-items: center; gap: 5px;
-  margin-bottom: 10px; justify-content: center;
-}
-.happiness-heart {
-  font-size: 20px; filter: grayscale(1); opacity: .3;
-  transition: var(--transition);
-}
-.happiness-heart.filled {
-  filter: none; opacity: 1;
-  animation: heart-pop .3s ease;
-}
-@keyframes heart-pop {
-  0% { transform: scale(.5); }
-  50% { transform: scale(1.3); }
-  100% { transform: scale(1); }
-}
-.happiness-label { font-size: 12px; color: var(--text-dim); margin-left: 6px; }
-
-.bunny-status {
-  text-align: center; font-size: 12px;
-  color: var(--text-dim); margin-bottom: 10px; min-height: 18px;
-}
-
-.food-inventory {
-  display: flex; flex-wrap: wrap; gap: 6px;
-  justify-content: center; min-height: 52px;
-  padding: 8px; background: var(--bg-soft);
-  border-radius: var(--radius-sm);
-  border: 1px dashed var(--border);
-}
-.food-item {
-  width: 44px; height: 44px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 26px;
-  background: white;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  cursor: pointer;
-  transition: var(--transition);
-  position: relative;
-  animation: food-appear .4s ease;
-}
-.food-item:hover {
-  transform: translateY(-3px) scale(1.1);
-  box-shadow: var(--shadow);
-  border-color: var(--accent);
-}
-.food-item:active { transform: scale(.95); }
-.food-item .food-count {
-  position: absolute; top: -4px; right: -4px;
-  background: var(--accent); color: white;
-  font-size: 9px; font-weight: 700;
-  padding: 1px 5px; border-radius: 8px;
-  min-width: 14px; text-align: center;
-}
-.food-item.legendary {
-  background: linear-gradient(135deg, #FEFCBF, #FAF5FF);
-  border-color: #FBD38D;
-  box-shadow: 0 0 10px rgba(251,211,141,.3);
-  animation: food-appear .4s ease, golden-glow 2s ease-in-out infinite;
-}
-@keyframes food-appear {
-  from { transform: scale(0) rotate(180deg); opacity: 0; }
-  to { transform: scale(1) rotate(0); opacity: 1; }
-}
-@keyframes golden-glow {
-  0%,100% { box-shadow: 0 0 10px rgba(251,211,141,.3); }
-  50% { box-shadow: 0 0 18px rgba(251,211,141,.6); }
-}
-.food-empty { color: var(--text-faint); font-size: 12px; text-align: center; width: 100%; padding: 10px; }
-
-.feed-particle {
-  position: absolute; font-size: 22px;
-  pointer-events: none; z-index: 10;
-  animation: feed-fly .8s ease-in forwards;
-}
-@keyframes feed-fly {
-  0% { transform: translate(0,0) scale(1); opacity: 1; }
-  100% { transform: translate(var(--tx),var(--ty)) scale(.3); opacity: 0; }
-}
-.sparkle {
-  position: absolute; pointer-events: none; z-index: 10;
-  animation: sparkle-burst .6s ease-out forwards;
-}
-@keyframes sparkle-burst {
-  0% { transform: scale(0) rotate(0); opacity: 1; }
-  50% { transform: scale(1.5) rotate(180deg); opacity: 1; }
-  100% { transform: scale(0) rotate(360deg); opacity: 0; }
-}
-
 /* ===== Modal ===== */
 .modal-overlay {
   position: fixed; inset: 0;
@@ -677,17 +529,7 @@ body {
   background: var(--danger); color: white;
   padding: 2px 10px; border-radius: 20px; font-size: 12px;
 }
-.reward-section {
-  margin-bottom: 16px; padding: 14px;
-  background: linear-gradient(135deg, var(--accent-light), var(--accent-2-light));
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm); text-align: center;
-}
-.reward-section h4 { font-size: 14px; margin-bottom: 8px; color: var(--accent); }
-.reward-items { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
-.reward-item { display: flex; flex-direction: column; align-items: center; gap: 3px; animation: food-appear .5s ease; }
-.reward-item .emoji { font-size: 32px; }
-.reward-item .label { font-size: 10px; color: var(--text-dim); }
+
 .modal-actions { display: flex; gap: 10px; }
 .btn {
   flex: 1; padding: 12px; border: none;
@@ -809,29 +651,8 @@ body {
         </div>
       </div>
 
-      <!-- Bottom grid: Bunny + Stats -->
+      <!-- Bottom: Stats -->
       <div class="bottom-grid">
-        <!-- Bunny -->
-        <div class="card bunny-card">
-          <h3>🐰 Your Bunny Buddy</h3>
-          <div class="bunny-scene" id="bunnyScene">
-            <img class="bunny-img" id="bunnyImg" src="A_super_cute_cartoon_bunny_cha_2026-07-30T00-42-23.png" alt="Bunny">
-          </div>
-          <div class="happiness-bar" id="happinessBar">
-            <span class="happiness-heart">💛</span>
-            <span class="happiness-heart">🤍</span>
-            <span class="happiness-heart">🤍</span>
-            <span class="happiness-heart">🤍</span>
-            <span class="happiness-heart">🤍</span>
-            <span class="happiness-label" id="happinessLabel">Happy</span>
-          </div>
-          <div class="bunny-status" id="bunnyStatus">Complete a session to earn food! 🎯</div>
-          <div class="food-inventory" id="foodInventory">
-            <div class="food-empty">No food yet — finish a practice to earn some! 🥕</div>
-          </div>
-        </div>
-
-        <!-- Right side: Filler breakdown + Progress + Badges -->
         <div style="display:flex;flex-direction:column;gap:16px;">
           <div class="card">
             <h3>📊 Filler Word Tracker</h3>
@@ -886,7 +707,6 @@ body {
       <div class="modal-stat"><div class="val" id="modalWords">0</div><div class="lbl">Total Words</div></div>
     </div>
     <div class="modal-fb-list" id="modalFbList"><h4>Top filler words used:</h4></div>
-    <div id="modalRewards" style="display:none;"></div>
     <div class="modal-actions">
       <button class="btn btn-secondary" id="modalCloseBtn">Close</button>
       <button class="btn btn-primary" id="modalRetryBtn">Try Again 🔁</button>
@@ -924,6 +744,14 @@ const FILLER_WORDS = {
     { word: 'sort of', emoji: '😬' },
     { word: 'kind of', emoji: '😬' },
     { word: 'i guess', emoji: '😬' },
+    { word: 'hmm', emoji: '😬' },
+    { word: 'huh', emoji: '😬' },
+    { word: 'mmm', emoji: '😬' },
+    { word: 'well', emoji: '😬' },
+    { word: 'anyway', emoji: '😬' },
+    { word: 'anyways', emoji: '😬' },
+    { word: 'yeah', emoji: '😬' },
+    { word: 'so basically', emoji: '😬' },
   ],
   zh: [
     { word: '然后', emoji: '😬' },
@@ -943,6 +771,15 @@ const FILLER_WORDS = {
     { word: '之类的', emoji: '😬' },
     { word: '反正', emoji: '😬' },
     { word: '其实吧', emoji: '😬' },
+    { word: '嗯嗯', emoji: '😬' },
+    { word: '对对对', emoji: '😬' },
+    { word: '所以说', emoji: '😬' },
+    { word: '我觉得', emoji: '😬' },
+    { word: '那那那', emoji: '😬' },
+    { word: '这这这', emoji: '😬' },
+    { word: '嘛', emoji: '😬' },
+    { word: '呢', emoji: '😬' },
+    { word: '话又说回来', emoji: '😬' },
   ],
   fr: [
     { word: 'euh', emoji: '😬' },
@@ -959,6 +796,11 @@ const FILLER_WORDS = {
     { word: 'bref', emoji: '😬' },
     { word: 'voila', emoji: '😬' },
     { word: 'enfin', emoji: '😬' },
+    { word: 'hum', emoji: '😬' },
+    { word: 'j\'avoue', emoji: '😬' },
+    { word: 'en gros', emoji: '😬' },
+    { word: 'c\'est-a-dire', emoji: '😬' },
+  ],
     { word: 'c\'est-a-dire', emoji: '😬' },
     { word: 'machin', emoji: '😬' },
     { word: 'truc', emoji: '😬' },
@@ -1136,43 +978,6 @@ const BADGES = [
   { id: 'polyglot3', icon: '🏆', name: 'Trilingual', cond: s => s.languagesUsed && s.languagesUsed.length >= 3 },
 ];
 
-/* ===== Bunny Food Types ===== */
-const FOOD_TYPES = {
-  carrot:     { emoji: '🥕', name: { en: 'Carrot', zh: '胡萝卜', fr: 'Carotte' }, happiness: 1, rarity: 'common' },
-  apple:      { emoji: '🍎', name: { en: 'Apple', zh: '苹果', fr: 'Pomme' }, happiness: 1, rarity: 'common' },
-  lettuce:    { emoji: '🥬', name: { en: 'Lettuce', zh: '生菜', fr: 'Salade' }, happiness: 1, rarity: 'common' },
-  strawberry: { emoji: '🍓', name: { en: 'Strawberry', zh: '草莓', fr: 'Fraise' }, happiness: 2, rarity: 'rare' },
-  banana:     { emoji: '🍌', name: { en: 'Banana', zh: '香蕉', fr: 'Banane' }, happiness: 2, rarity: 'rare' },
-  golden:     { emoji: '🌟', name: { en: 'Golden Carrot', zh: '金胡萝卜', fr: 'Carotte Doree' }, happiness: 3, rarity: 'legendary' },
-};
-
-/* Bunny status messages */
-const BUNNY_STATUS = {
-  en: {
-    hungry: 'I\'m hungry... complete a session to earn food! 🥕',
-    hasFood: 'Tap the food to feed me! 🐰',
-    eating: 'Nom nom nom! So yummy! 😋',
-    happy: 'I\'m so happy! Thank you! 💕',
-    veryHappy: 'I love you so much! You\'re the best! 🥰',
-    full: 'I\'m so full and happy! 🤗',
-  },
-  zh: {
-    hungry: '我饿了... 完成练习就能获得食物哦！🥕',
-    hasFood: '点食物喂我吧！🐰',
-    eating: '好吃好吃！真香！😋',
-    happy: '我好开心！谢谢你！💕',
-    veryHappy: '我最喜欢你了！你最好了！🥰',
-    full: '我吃得好饱好开心！🤗',
-  },
-  fr: {
-    hungry: 'J\'ai faim... fais une session pour gagner de la nourriture ! 🥕',
-    hasFood: 'Clique sur la nourriture pour me nourrir ! 🐰',
-    eating: 'Miam miam ! C\'est delicieux ! 😋',
-    happy: 'Je suis si heureux ! Merci ! 💕',
-    veryHappy: 'Je t\'aime tellement ! Tu es le meilleur ! 🥰',
-    full: 'Je suis plein et heureux ! 🤗',
-  },
-};
 const SR_LANG = { en: 'en-US', zh: 'zh-CN', fr: 'fr-FR' };
 
 /* ===== State ===== */
@@ -1226,12 +1031,6 @@ const statFillers = $('statFillers');
 const fillerFlash = $('fillerFlash');
 const langSelect = $('langSelect');
 const profileSelect = $('profileSelect');
-const bunnyImg = $('bunnyImg');
-const bunnyScene = $('bunnyScene');
-const happinessBar = $('happinessBar');
-const happinessLabel = $('happinessLabel');
-const bunnyStatusEl = $('bunnyStatus');
-const foodInventoryEl = $('foodInventory');
 
 /* ===== Initialize ===== */
 function init() {
@@ -1239,7 +1038,7 @@ function init() {
   profileSelect.addEventListener('change', () => {
     if (profileSelect.value === '__rename__') { handleRename(); return; }
     state.profile = profileSelect.value;
-    renderTopics(); renderTip(); renderProgressChart(); renderBadges(); renderBunny();
+    renderTopics(); renderTip(); renderProgressChart(); renderBadges();
     showToast(`Switched to ${getProfileDisplayName(state.profile)}`);
   });
   langSelect.addEventListener('change', () => {
@@ -1254,7 +1053,7 @@ function init() {
   });
   $('modalCloseBtn').addEventListener('click', closeSummary);
   $('modalRetryBtn').addEventListener('click', () => { closeSummary(); setTimeout(() => toggleRecording(), 300); });
-  renderTopics(); renderTip(); renderFillerBreakdown(); renderProgressChart(); renderBadges(); renderBunny();
+  renderTopics(); renderTip(); renderFillerBreakdown(); renderProgressChart(); renderBadges();
   if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
     showToast('⚠️ Speech recognition not supported. Use Chrome or Edge browser.');
     micBtn.disabled = true; micBtn.style.opacity = '0.5';
@@ -1351,7 +1150,7 @@ function startRecording() {
   state.recognition.lang = SR_LANG[state.lang];
   state.recognition.continuous = true;
   state.recognition.interimResults = true;
-  state.recognition.maxAlternatives = 1;
+  state.recognition.maxAlternatives = 5;
   state.transcript = ''; state.interimText = ''; state.fillerCounts = {};
   state.totalFillers = 0; state.totalWords = 0; state.elapsed = 0; state.startTime = Date.now();
   state.recognition.onstart = () => {
@@ -1359,35 +1158,55 @@ function startRecording() {
     micBtn.classList.add('recording'); micBtn.textContent = '⏹';
     micLabel.textContent = 'Recording...';
     micStatus.textContent = state.currentTopic ? `Topic: ${truncate(state.currentTopic, 30)}` : 'Speak naturally!';
-    liveDot.classList.add('active'); transcriptEl.innerHTML = '';
+    liveDot.classList.remove('reconnecting'); liveDot.classList.add('active'); transcriptEl.innerHTML = '';
     state.timerInterval = setInterval(updateTimer, 100); renderTip();
   };
   state.recognition.onresult = (event) => {
     let interim = '', final = '';
     for (let i = event.resultIndex; i < event.results.length; i++) {
-      const transcript = event.results[i][0].transcript;
-      if (event.results[i].isFinal) { final += transcript + ' '; } else { interim += transcript; }
-    }
-    if (final) {
-      state.transcript += final;
-      const newFillers = countFillers(final);
-      Object.entries(newFillers).forEach(([word, count]) => {
-        state.fillerCounts[word] = (state.fillerCounts[word] || 0) + count;
-        state.totalFillers += count;
-      });
-      state.totalWords += final.trim().split(/\s+/).filter(w => w.length > 0).length;
-      if (Object.keys(newFillers).length > 0) { flashFiller(); }
+      const result = event.results[i];
+      const topTranscript = result[0].transcript;
+      if (result.isFinal) {
+        final += topTranscript + ' ';
+        const newFillers = countFillers(topTranscript);
+        /* Also scan alternative transcripts for fillers that the top result missed */
+        for (let alt = 1; alt < Math.min(result.length, 5); alt++) {
+          const altText = result[alt].transcript;
+          const altFillers = countFillers(altText);
+          Object.entries(altFillers).forEach(([word, count]) => {
+            if (!newFillers[word]) { newFillers[word] = count; }
+          });
+        }
+        Object.entries(newFillers).forEach(([word, count]) => {
+          state.fillerCounts[word] = (state.fillerCounts[word] || 0) + count;
+          state.totalFillers += count;
+        });
+        state.totalWords += topTranscript.trim().split(/\s+/).filter(w => w.length > 0).length;
+        if (Object.keys(newFillers).length > 0) { flashFiller(); }
+      } else { interim += topTranscript; }
     }
     state.interimText = interim;
     renderTranscript(); updateLiveStats(); renderFillerBreakdown();
   };
   state.recognition.onerror = (event) => {
-    if (event.error === 'no-speech') { micStatus.textContent = 'No speech detected, still listening...'; }
+    if (event.error === 'no-speech') { micStatus.textContent = 'Listening... (no speech yet)'; }
     else if (event.error === 'not-allowed') { showToast('⚠️ Please allow microphone access.'); stopRecording(); }
-    else if (event.error === 'network') { showToast('⚠️ Network error.'); stopRecording(); }
+    else if (event.error === 'network') { showToast('⚠️ Network hiccup, reconnecting...'); liveDot.classList.add('reconnecting'); micStatus.textContent = 'Reconnecting...'; }
+    else if (event.error === 'audio-capture') { showToast('⚠️ No microphone found.'); stopRecording(); }
+    else if (event.error === 'aborted') { /* ignore — expected during restart */ }
   };
+  state.recognition.restartDelay = 0;
   state.recognition.onend = () => {
-    if (state.isRecording && state.continuousMode) { try { state.recognition.start(); } catch(e) {} }
+    if (state.isRecording && state.continuousMode) {
+      liveDot.classList.add('reconnecting');
+      state.recognition.restartDelay = Math.min((state.recognition.restartDelay || 0) + 100, 1000);
+      setTimeout(() => {
+        if (state.isRecording && state.continuousMode) {
+          try { state.recognition.start(); state.recognition.restartDelay = 0; }
+          catch(e) { /* will retry on next cycle */ }
+        }
+      }, state.recognition.restartDelay);
+    }
   };
   try { state.recognition.start(); } catch(e) { showToast('⚠️ Could not start microphone.'); }
 }
@@ -1399,7 +1218,7 @@ function stopRecording() {
   clearInterval(state.timerInterval);
   micBtn.classList.remove('recording', 'paused'); micBtn.textContent = '🎤';
   micLabel.textContent = 'Tap to start'; micStatus.textContent = 'Ready when you are';
-  liveDot.classList.remove('active');
+  liveDot.classList.remove('active', 'reconnecting');
   const durationSec = Math.max(state.elapsed / 1000, 1);
   const durationMin = durationSec / 60;
   const rate = state.totalFillers / durationMin;
@@ -1416,10 +1235,8 @@ function stopRecording() {
   data.history.push({ date: Date.now(), lang: state.lang, duration: durationSec, fillers: state.totalFillers, words: state.totalWords, rate: rate, score: score, topic: state.currentTopic || '(free talk)' });
   if (data.history.length > 20) data.history = data.history.slice(-20);
   saveProfileData(state.profile, data);
-  const foodRewards = generateFoodRewards(score);
-  addFoodToBunny(foodRewards);
-  showSummary(durationSec, rate, score, foodRewards);
-  renderProgressChart(); renderBadges(); renderBunny();
+  showSummary(durationSec, rate, score);
+  renderProgressChart(); renderBadges();
   state.continuousMode = true;
 }
 
@@ -1444,7 +1261,7 @@ function escapeRegex(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 /* ===== Render Transcript ===== */
 function renderTranscript() {
   let html = highlightFillers(state.transcript);
-  if (state.interimText) { html += `<span style="color:var(--text-faint);font-style:italic;">${escapeHtml(state.interimText)}</span>`; }
+  if (state.interimText) { html += `<span style="color:var(--text-faint);font-style:italic;">${highlightFillers(state.interimText)}</span>`; }
   if (!html) { html = `<span class="transcript-placeholder">${getPlaceholder()}</span>`; }
   transcriptEl.innerHTML = html;
   transcriptEl.scrollTop = transcriptEl.scrollHeight;
@@ -1538,7 +1355,7 @@ function calculateScore(rate, fillers, words) {
 }
 
 /* ===== Show Summary Modal ===== */
-function showSummary(durationSec, rate, score, foodRewards) {
+function showSummary(durationSec, rate, score) {
   $('modalScore').textContent = score;
   $('modalDuration').textContent = formatDuration(durationSec);
   $('modalFillers').textContent = state.totalFillers;
@@ -1568,18 +1385,6 @@ function showSummary(durationSec, rate, score, foodRewards) {
     fbListEl.innerHTML = `<h4>${header[state.lang] || header.en}</h4>` + entries.map(([word, count]) => `<div class="modal-fb-item"><span class="word">"${word}"</span><span class="cnt">${count}×</span></div>`).join('');
   }
   $('summaryModal').classList.add('active');
-  const rewardEl = $('modalRewards');
-  if (foodRewards && foodRewards.length > 0) {
-    const rewardHeader = { en: '🐰 Bunny Food Earned!', zh: '🐰 获得兔子食物！', fr: '🐰 Nourriture gagnee !' };
-    let rewardHtml = `<div class="reward-section"><h4>${rewardHeader[state.lang] || rewardHeader.en}</h4><div class="reward-items">`;
-    foodRewards.forEach(f => {
-      const food = FOOD_TYPES[f]; const name = food.name[state.lang] || food.name.en;
-      rewardHtml += `<div class="reward-item"><span class="emoji">${food.emoji}</span><span class="label">${name}</span></div>`;
-    });
-    const feedTip = { en: 'Go feed your bunny! →', zh: '去喂你的小兔子吧！→', fr: 'Va nourrir ton lapin ! →' };
-    rewardHtml += `</div><p style="margin-top:8px;font-size:12px;color:var(--text-dim);">${feedTip[state.lang] || feedTip.en}</p></div>`;
-    rewardEl.innerHTML = rewardHtml; rewardEl.style.display = 'block';
-  } else { rewardEl.style.display = 'none'; }
 }
 
 /* ===== Close Summary ===== */
@@ -1587,118 +1392,6 @@ function closeSummary() {
   $('summaryModal').classList.remove('active');
   $('scoreCircle').style.transition = 'none';
   $('scoreCircle').style.strokeDashoffset = '377';
-}
-
-/* ===== Bunny Reward System ===== */
-function loadBunnyData(profile) {
-  const raw = localStorage.getItem(`speechstar_bunny_${profile}`);
-  if (raw) { try { return JSON.parse(raw); } catch(e) {} }
-  return { happiness: 3, totalFeeds: 0, foodInventory: {}, lastInteraction: Date.now() };
-}
-function saveBunnyData(profile, data) { data.lastInteraction = Date.now(); localStorage.setItem(`speechstar_bunny_${profile}`, JSON.stringify(data)); }
-function generateFoodRewards(score) {
-  const rewards = [];
-  let count = score >= 90 ? 3 : score >= 75 ? 2 : 1;
-  for (let i = 0; i < count; i++) {
-    const roll = Math.random();
-    if (score >= 90 && roll < 0.15) rewards.push('golden');
-    else if (score >= 75 && roll < 0.30) rewards.push('strawberry');
-    else if (roll < 0.15) rewards.push('strawberry');
-    else if (roll < 0.30) rewards.push('banana');
-    else { const commons = ['carrot', 'apple', 'lettuce']; rewards.push(commons[Math.floor(Math.random() * 3)]); }
-  }
-  return rewards;
-}
-function addFoodToBunny(foods) {
-  if (!foods || foods.length === 0) return;
-  const data = loadBunnyData(state.profile);
-  if (!data.foodInventory) data.foodInventory = {};
-  foods.forEach(f => { data.foodInventory[f] = (data.foodInventory[f] || 0) + 1; });
-  saveBunnyData(state.profile, data);
-}
-function renderBunny() {
-  const data = loadBunnyData(state.profile);
-  const msgs = BUNNY_STATUS[state.lang] || BUNNY_STATUS.en;
-  const hearts = happinessBar.querySelectorAll('.happiness-heart');
-  const filledCount = Math.ceil(data.happiness / 2);
-  hearts.forEach((h, i) => {
-    if (i < filledCount) { h.classList.add('filled'); h.textContent = '💛'; }
-    else { h.classList.remove('filled'); h.textContent = '🤍'; }
-  });
-  const labels = { en: ['Sad','Okay','Content','Happy','Very Happy','Joyful!'], zh: ['难过','还行','满足','开心','很开心','超级开心！'], fr: ['Triste','OK','Content','Heureux','Très heureux','Rayonnant !'] };
-  const labelSet = labels[state.lang] || labels.en;
-  happinessLabel.textContent = labelSet[Math.min(Math.floor(data.happiness / 2), labelSet.length - 1)];
-  const hasFood = data.foodInventory && Object.values(data.foodInventory).some(c => c > 0);
-  if (data.happiness >= 9) bunnyStatusEl.textContent = msgs.full;
-  else if (data.happiness >= 7) bunnyStatusEl.textContent = msgs.veryHappy;
-  else if (hasFood) bunnyStatusEl.textContent = msgs.hasFood;
-  else bunnyStatusEl.textContent = msgs.hungry;
-  renderFoodInventory(data);
-}
-function renderFoodInventory(data) {
-  const inventory = data.foodInventory || {};
-  const entries = Object.entries(inventory).filter(([_, c]) => c > 0);
-  if (entries.length === 0) {
-    const emptyMsg = { en: 'No food yet — finish a practice! 🥕', zh: '还没有食物 — 完成练习就能获得！🥕', fr: 'Pas de nourriture — fais une session ! 🥕' };
-    foodInventoryEl.innerHTML = `<div class="food-empty">${emptyMsg[state.lang] || emptyMsg.en}</div>`;
-    return;
-  }
-  entries.sort((a, b) => {
-    const ra = FOOD_TYPES[a[0]]?.rarity === 'legendary' ? 0 : FOOD_TYPES[a[0]]?.rarity === 'rare' ? 1 : 2;
-    const rb = FOOD_TYPES[b[0]]?.rarity === 'legendary' ? 0 : FOOD_TYPES[b[0]]?.rarity === 'rare' ? 1 : 2;
-    return ra - rb;
-  });
-  foodInventoryEl.innerHTML = entries.map(([type, count]) => {
-    const food = FOOD_TYPES[type]; if (!food) return '';
-    const legendaryClass = food.rarity === 'legendary' ? 'legendary' : '';
-    return `<div class="food-item ${legendaryClass}" data-food="${type}" title="${food.name[state.lang] || food.name.en}">${food.emoji}${count > 1 ? `<span class="food-count">${count}</span>` : ''}</div>`;
-  }).join('');
-  foodInventoryEl.querySelectorAll('.food-item').forEach(el => {
-    el.addEventListener('click', () => { feedBunny(el.dataset.food, el); });
-  });
-}
-function feedBunny(foodType, foodEl) {
-  const data = loadBunnyData(state.profile);
-  if (!data.foodInventory[foodType] || data.foodInventory[foodType] <= 0) return;
-  const food = FOOD_TYPES[foodType]; if (!food) return;
-  data.foodInventory[foodType]--;
-  if (data.foodInventory[foodType] <= 0) delete data.foodInventory[foodType];
-  data.happiness = Math.min(10, data.happiness + food.happiness);
-  data.totalFeeds++; saveBunnyData(state.profile, data);
-  const foodRect = foodEl.getBoundingClientRect();
-  const bunnyRect = bunnyImg.getBoundingClientRect();
-  const sceneRect = bunnyScene.getBoundingClientRect();
-  const particle = document.createElement('div');
-  particle.className = 'feed-particle'; particle.textContent = food.emoji;
-  particle.style.left = (foodRect.left - sceneRect.left + foodRect.width / 2 - 12) + 'px';
-  particle.style.top = (foodRect.top - sceneRect.top + foodRect.height / 2 - 12) + 'px';
-  particle.style.setProperty('--tx', (bunnyRect.left - foodRect.left + bunnyRect.width / 2 - foodRect.width / 2) + 'px');
-  particle.style.setProperty('--ty', (bunnyRect.top - foodRect.top + bunnyRect.height / 2 - foodRect.height / 2) + 'px');
-  bunnyScene.appendChild(particle);
-  setTimeout(() => particle.remove(), 800);
-  bunnyImg.classList.add('eating');
-  bunnyStatusEl.textContent = (BUNNY_STATUS[state.lang] || BUNNY_STATUS.en).eating;
-  setTimeout(() => {
-    for (let i = 0; i < 6; i++) {
-      const sparkle = document.createElement('div');
-      sparkle.className = 'sparkle';
-      sparkle.textContent = ['✨', '⭐', '💫', '🌟'][Math.floor(Math.random() * 4)];
-      sparkle.style.left = (bunnyRect.left - sceneRect.left + bunnyRect.width / 2 + (Math.random() - 0.5) * 80) + 'px';
-      sparkle.style.top = (bunnyRect.top - sceneRect.top + 20 + (Math.random() - 0.5) * 40) + 'px';
-      sparkle.style.fontSize = (12 + Math.random() * 12) + 'px';
-      sparkle.style.animationDelay = (i * 0.08) + 's';
-      bunnyScene.appendChild(sparkle);
-      setTimeout(() => sparkle.remove(), 700 + i * 80);
-    }
-  }, 400);
-  setTimeout(() => { bunnyImg.classList.remove('eating'); bunnyImg.classList.add('happy'); setTimeout(() => bunnyImg.classList.remove('happy'), 600); }, 1500);
-  setTimeout(() => {
-    renderBunny();
-    if (data.happiness >= 10) {
-      const fullMsg = { en: '🐰 Your bunny is full and super happy! 💕', zh: '🐰 你的小兔子吃饱啦，超级开心！💕', fr: '🐰 Ton lapin est plein et heureux ! 💕' };
-      showToast(fullMsg[state.lang] || fullMsg.en);
-    }
-  }, 2200);
 }
 
 /* ===== Flash & Toast ===== */
