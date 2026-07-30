@@ -1034,26 +1034,34 @@ const profileSelect = $('profileSelect');
 
 /* ===== Initialize ===== */
 function init() {
-  loadProfileNames();
-  profileSelect.addEventListener('change', () => {
-    if (profileSelect.value === '__rename__') { handleRename(); return; }
-    state.profile = profileSelect.value;
-    renderTopics(); renderTip(); renderProgressChart(); renderBadges();
-    showToast(`Switched to ${getProfileDisplayName(state.profile)}`);
-  });
-  langSelect.addEventListener('change', () => {
-    state.lang = langSelect.value;
-    renderTopics(); renderTip(); renderFillerBreakdown();
-    if (!state.isRecording) { transcriptEl.innerHTML = `<span class="transcript-placeholder">${getPlaceholder()}</span>`; }
-  });
-  micBtn.addEventListener('click', toggleRecording);
-  customTopicInput.addEventListener('input', () => {
-    state.currentTopic = customTopicInput.value;
-    document.querySelectorAll('.topic-chip').forEach(c => c.classList.remove('active'));
-  });
-  $('modalCloseBtn').addEventListener('click', closeSummary);
-  $('modalRetryBtn').addEventListener('click', () => { closeSummary(); setTimeout(() => toggleRecording(), 300); });
-  renderTopics(); renderTip(); renderFillerBreakdown(); renderProgressChart(); renderBadges();
+  /* Render topics FIRST so they appear even if something else fails */
+  try { renderTopics(); renderTip(); renderFillerBreakdown(); renderProgressChart(); renderBadges(); } catch(e) { console.error('Render error:', e); }
+  /* Load profile names with safe localStorage handling */
+  try { loadProfileNames(); } catch(e) { console.error('Profile load error:', e); }
+  try {
+    profileSelect.addEventListener('change', () => {
+      if (profileSelect.value === '__rename__') { handleRename(); return; }
+      state.profile = profileSelect.value;
+      renderTopics(); renderTip(); renderProgressChart(); renderBadges();
+      showToast(`Switched to ${getProfileDisplayName(state.profile)}`);
+    });
+  } catch(e) {}
+  try {
+    langSelect.addEventListener('change', () => {
+      state.lang = langSelect.value;
+      renderTopics(); renderTip(); renderFillerBreakdown();
+      if (!state.isRecording) { transcriptEl.innerHTML = `<span class="transcript-placeholder">${getPlaceholder()}</span>`; }
+    });
+  } catch(e) {}
+  try { micBtn.addEventListener('click', toggleRecording); } catch(e) {}
+  try {
+    customTopicInput.addEventListener('input', () => {
+      state.currentTopic = customTopicInput.value;
+      document.querySelectorAll('.topic-chip').forEach(c => c.classList.remove('active'));
+    });
+  } catch(e) {}
+  try { $('modalCloseBtn').addEventListener('click', closeSummary); } catch(e) {}
+  try { $('modalRetryBtn').addEventListener('click', () => { closeSummary(); setTimeout(() => toggleRecording(), 300); }); } catch(e) {}
   if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
     showToast('⚠️ Speech recognition not supported. Use Chrome or Edge browser.');
     micBtn.disabled = true; micBtn.style.opacity = '0.5';
@@ -1063,10 +1071,12 @@ function init() {
 
 /* ===== Profile Names ===== */
 function loadProfileNames() {
-  const raw = localStorage.getItem('speechstar_profiles');
-  if (!raw) { saveProfileNames({ kid1: 'Kid 1 (13 yrs)', kid2: 'Kid 2 (10 yrs)' }); return; }
+  let names = { kid1: 'Kid 1 (13 yrs)', kid2: 'Kid 2 (10 yrs)' };
   try {
-    const names = JSON.parse(raw);
+    const raw = localStorage.getItem('speechstar_profiles');
+    if (raw) { names = JSON.parse(raw); }
+  } catch(e) {}
+  try {
     profileSelect.innerHTML = '';
     Object.entries(names).forEach(([key, name]) => {
       const opt = document.createElement('option');
@@ -1078,7 +1088,10 @@ function loadProfileNames() {
     profileSelect.appendChild(renameOpt);
   } catch(e) {}
 }
-function saveProfileNames(names) { localStorage.setItem('speechstar_profiles', JSON.stringify(names)); loadProfileNames(); }
+function saveProfileNames(names) {
+  try { localStorage.setItem('speechstar_profiles', JSON.stringify(names)); } catch(e) {}
+  loadProfileNames();
+}
 function getProfileDisplayName(key) {
   const raw = localStorage.getItem('speechstar_profiles');
   if (raw) { try { const names = JSON.parse(raw); return names[key] || key; } catch(e) {} }

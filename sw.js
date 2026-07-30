@@ -1,4 +1,4 @@
-const CACHE_NAME = 'speech-star-v1';
+const CACHE_NAME = 'speech-star-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -31,11 +31,23 @@ self.addEventListener('activate', function(e) {
 });
 
 self.addEventListener('fetch', function(e) {
-  e.respondWith(
-    caches.match(e.request).then(function(response) {
-      return response || fetch(e.request).catch(function() {
+  if (e.request.mode === 'navigate') {
+    /* Network-first for HTML pages so updates are picked up immediately */
+    e.respondWith(
+      fetch(e.request).then(function(response) {
+        var copy = response.clone();
+        caches.open(CACHE_NAME).then(function(cache) { cache.put('./index.html', copy); });
+        return response;
+      }).catch(function() {
         return caches.match('./index.html');
-      });
-    })
-  );
+      })
+    );
+  } else {
+    /* Cache-first for other assets */
+    e.respondWith(
+      caches.match(e.request).then(function(response) {
+        return response || fetch(e.request);
+      })
+    );
+  }
 });
