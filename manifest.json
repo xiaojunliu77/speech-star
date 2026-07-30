@@ -1,0 +1,24 @@
+{
+  "name": "Speech Star - Filler Word Trainer",
+  "short_name": "Speech Star",
+  "description": "A fun tool to help kids reduce filler words and speak more clearly",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#FDF2F8",
+  "theme_color": "#F687B3",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

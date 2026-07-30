@@ -1,0 +1,1738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Speech Star — Filler Word Trainer</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#F687B3">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Speech Star">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<style>
+/* ===== Reset & Base ===== */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg-main: #FDF2F8;
+  --bg-side: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --bg-soft: #FFF5F9;
+  --bg-input: #FDF2F8;
+  --accent: #F687B3;
+  --accent-light: #FBCFE8;
+  --accent-2: #C4B5FD;
+  --accent-2-light: #E9D8FD;
+  --accent-3: #9AE6B4;
+  --warn: #FBD38D;
+  --danger: #FC8181;
+  --success: #68D391;
+  --text: #553C60;
+  --text-dim: #9F8AA8;
+  --text-faint: #D6BCF0;
+  --border: #F3D9E6;
+  --border-soft: #FCE7F3;
+  --shadow-sm: 0 2px 8px rgba(246,135,179,.08);
+  --shadow: 0 4px 20px rgba(246,135,179,.10);
+  --shadow-lg: 0 8px 32px rgba(246,135,179,.12);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --transition: .3s cubic-bezier(.4,0,.2,1);
+}
+
+body {
+  font-family: 'Nunito', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: var(--bg-main);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  background-image:
+    radial-gradient(ellipse at 0% 0%, rgba(246,135,179,.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 100% 100%, rgba(196,181,253,.08) 0%, transparent 50%);
+}
+
+/* ===== Layout ===== */
+#app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.workbench {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 880px) {
+  .workbench { grid-template-columns: 1fr; }
+}
+
+/* ===== Sidebar (Left Panel) ===== */
+.sidebar-left {
+  background: var(--bg-side);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+  position: sticky;
+  top: 16px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+}
+@media (max-width: 880px) {
+  .sidebar-left { position: static; max-height: none; }
+}
+.sidebar-left::-webkit-scrollbar { width: 6px; }
+.sidebar-left::-webkit-scrollbar-thumb { background: var(--accent-light); border-radius: 3px; }
+
+/* Logo */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 2px dashed var(--border-soft);
+}
+.logo-icon {
+  width: 44px; height: 44px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px;
+  box-shadow: 0 4px 14px rgba(246,135,179,.3);
+}
+.logo h1 {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -.5px;
+  color: var(--text);
+}
+.logo h1 span { color: var(--accent); }
+.logo p {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 1px;
+}
+
+/* Section labels */
+.section-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  margin-bottom: 8px;
+  margin-top: 16px;
+}
+.section-label:first-of-type { margin-top: 0; }
+.topic-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  margin-top: 16px;
+}
+.topic-header-row .section-label { margin: 0; }
+.shuffle-btn {
+  background: var(--bg-soft);
+  border: 1px solid var(--border-soft);
+  color: var(--accent);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+.shuffle-btn:hover {
+  background: white;
+  border-color: var(--accent);
+  box-shadow: var(--shadow-sm);
+}
+.shuffle-btn:active { transform: scale(0.95); }
+.shuffle-btn .shuffle-icon { display: inline-block; transition: transform 0.4s; }
+.shuffle-btn.spinning .shuffle-icon { transform: rotate(360deg); }
+
+/* Selects */
+.select-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.profile-select, .lang-select {
+  flex: 1;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: var(--transition);
+  outline: none;
+}
+.profile-select:hover, .lang-select:hover { border-color: var(--accent); background: var(--bg-soft); }
+.profile-select:focus, .lang-select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
+.profile-select option, .lang-select option { background: white; color: var(--text); }
+
+/* Topic chips */
+.topic-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 160px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.topic-chips::-webkit-scrollbar { width: 5px; }
+.topic-chips::-webkit-scrollbar-thumb { background: var(--accent-light); border-radius: 3px; }
+.topic-chip {
+  background: var(--bg-soft);
+  border: 1px solid var(--border-soft);
+  color: var(--text);
+  padding: 7px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: var(--transition);
+  line-height: 1.3;
+}
+.topic-chip:hover {
+  border-color: var(--accent);
+  background: white;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+.topic-chip.active {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  border-color: transparent;
+  color: white;
+  box-shadow: 0 3px 12px rgba(246,135,179,.25);
+}
+.topic-custom {
+  margin-top: 8px;
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  transition: var(--transition);
+}
+.topic-custom:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
+.topic-custom::placeholder { color: var(--text-faint); }
+
+/* Tip */
+.tip-box {
+  background: linear-gradient(135deg, var(--accent-light), var(--accent-2-light));
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+/* Mic + Timer */
+.mic-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  background: var(--bg-soft);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-soft);
+}
+.mic-btn {
+  width: 60px; height: 60px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: white;
+  font-size: 26px;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 18px rgba(246,135,179,.3);
+  flex-shrink: 0;
+}
+.mic-btn:hover { transform: scale(1.08); box-shadow: 0 6px 24px rgba(246,135,179,.4); }
+.mic-btn.recording {
+  background: linear-gradient(135deg, var(--danger), #E53E3E);
+  animation: pulse-rec 1.5s ease-in-out infinite;
+}
+@keyframes pulse-rec {
+  0%, 100% { box-shadow: 0 4px 18px rgba(252,129,129,.3); }
+  50% { box-shadow: 0 4px 40px rgba(252,129,129,.5), 0 0 0 10px rgba(252,129,129,.08); }
+}
+.mic-info { flex: 1; }
+.mic-info .label { font-size: 14px; font-weight: 700; color: var(--text); }
+.mic-info .status { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+.timer {
+  font-size: 24px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+  letter-spacing: 1px;
+}
+
+/* Stats grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.stat-box {
+  background: var(--bg-soft);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 10px 8px;
+  text-align: center;
+  transition: var(--transition);
+}
+.stat-box.flash {
+  border-color: var(--danger);
+  background: rgba(252,129,129,.1);
+}
+.stat-value {
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1;
+}
+.stat-value.danger { color: var(--danger); }
+.stat-value.warn { color: #D69E2E; }
+.stat-value.good { color: var(--success); }
+.stat-label {
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: .3px;
+}
+
+/* ===== Main Area (Right Panel) ===== */
+.main-area {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+}
+.card h3 {
+  font-size: 14px;
+  color: var(--text-dim);
+  margin-bottom: 12px;
+  display: flex; align-items: center; gap: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .3px;
+}
+
+/* Transcript */
+.transcript-card { min-height: 220px; }
+.transcript-card h3 .live-dot {
+  width: 8px; height: 8px;
+  background: var(--danger);
+  border-radius: 50%;
+  margin-left: 4px;
+  display: none;
+}
+.transcript-card h3 .live-dot.active {
+  display: inline-block;
+  animation: blink 1s ease-in-out infinite;
+}
+@keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+.transcript-text {
+  font-size: 16px;
+  line-height: 1.9;
+  min-height: 140px;
+  word-spacing: 1px;
+}
+.transcript-placeholder {
+  color: var(--text-faint);
+  font-style: italic;
+  font-size: 14px;
+}
+.filler-hit {
+  background: rgba(252,129,129,.2);
+  color: #E53E3E;
+  padding: 2px 5px;
+  border-radius: 5px;
+  font-weight: 700;
+  animation: flash-in .4s ease;
+}
+@keyframes flash-in {
+  from { background: rgba(252,129,129,.5); transform: scale(1.1); }
+  to { background: rgba(252,129,129,.2); transform: scale(1); }
+}
+
+/* Bottom grid */
+.bottom-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 720px) {
+  .bottom-grid { grid-template-columns: 1fr; }
+}
+
+/* Filler breakdown */
+.filler-breakdown { display: flex; flex-direction: column; gap: 6px; }
+.filler-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--bg-soft);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+}
+.filler-row .word { font-weight: 700; flex: 1; color: var(--text); }
+.filler-row .count {
+  background: var(--danger);
+  color: white;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  min-width: 24px;
+  text-align: center;
+}
+.filler-row .count.zero { background: var(--border); color: var(--text-faint); }
+.filler-empty {
+  color: var(--text-faint);
+  text-align: center;
+  padding: 16px;
+  font-size: 13px;
+}
+
+/* Progress chart */
+.progress-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 5px;
+  height: 100px;
+  padding: 8px 0;
+}
+.bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  height: 100%;
+  justify-content: flex-end;
+}
+.bar {
+  width: 100%;
+  border-radius: 5px 5px 0 0;
+  min-height: 3px;
+  transition: height .5s ease;
+}
+.bar-label { font-size: 9px; color: var(--text-faint); }
+.bar-value { font-size: 9px; color: var(--text-dim); font-weight: 700; }
+
+/* Badges */
+.badges { display: flex; flex-wrap: wrap; gap: 8px; }
+.badge {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  width: 64px; text-align: center;
+}
+.badge-icon {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  background: var(--bg-soft);
+  filter: grayscale(.8);
+  opacity: .4;
+  transition: var(--transition);
+}
+.badge.earned .badge-icon {
+  filter: none;
+  opacity: 1;
+  background: linear-gradient(135deg, var(--accent-light), var(--accent-2-light));
+  box-shadow: 0 3px 12px rgba(246,135,179,.2);
+}
+.badge-name { font-size: 9px; color: var(--text-dim); line-height: 1.2; }
+.badge.earned .badge-name { color: var(--text); }
+
+/* ===== Bunny ===== */
+.bunny-card h3::before { content: ''; }
+.bunny-scene {
+  position: relative;
+  height: 200px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(180deg, #E6FFFA 0%, #F0FFF4 40%, #C6F6D5 100%);
+  overflow: hidden;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  border: 1px solid #B2F5EA;
+}
+.bunny-scene::before {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 35%;
+  background: linear-gradient(180deg, transparent, rgba(154,230,180,.2));
+  border-radius: 50% 50% 0 0 / 20% 20% 0 0;
+}
+.bunny-scene::after {
+  content: '🌸 ✨ 🌷 ✨ 🌸';
+  position: absolute;
+  top: 8px; left: 0; right: 0;
+  text-align: center;
+  font-size: 10px;
+  letter-spacing: 24px;
+  opacity: .5;
+  pointer-events: none;
+}
+.bunny-img {
+  width: 120px; height: 120px;
+  object-fit: contain;
+  margin-bottom: 5px;
+  transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+  filter: drop-shadow(0 6px 12px rgba(0,0,0,.15));
+  position: relative; z-index: 2;
+  animation: bunny-idle 3s ease-in-out infinite;
+}
+.bunny-img.eating { animation: bunny-eat .5s ease-in-out 3; }
+.bunny-img.happy { animation: bunny-happy .6s ease-in-out; }
+@keyframes bunny-idle {
+  0%,100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-6px) scale(1.02); }
+}
+@keyframes bunny-eat {
+  0%,100% { transform: scale(1) rotate(0); }
+  25% { transform: scale(1.08) rotate(-3deg); }
+  75% { transform: scale(1.08) rotate(3deg); }
+}
+@keyframes bunny-happy {
+  0% { transform: scale(1) translateY(0); }
+  30% { transform: scale(1.2) translateY(-20px); }
+  60% { transform: scale(1.1) translateY(-10px); }
+  100% { transform: scale(1) translateY(0); }
+}
+
+.happiness-bar {
+  display: flex; align-items: center; gap: 5px;
+  margin-bottom: 10px; justify-content: center;
+}
+.happiness-heart {
+  font-size: 20px; filter: grayscale(1); opacity: .3;
+  transition: var(--transition);
+}
+.happiness-heart.filled {
+  filter: none; opacity: 1;
+  animation: heart-pop .3s ease;
+}
+@keyframes heart-pop {
+  0% { transform: scale(.5); }
+  50% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+.happiness-label { font-size: 12px; color: var(--text-dim); margin-left: 6px; }
+
+.bunny-status {
+  text-align: center; font-size: 12px;
+  color: var(--text-dim); margin-bottom: 10px; min-height: 18px;
+}
+
+.food-inventory {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  justify-content: center; min-height: 52px;
+  padding: 8px; background: var(--bg-soft);
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--border);
+}
+.food-item {
+  width: 44px; height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: var(--transition);
+  position: relative;
+  animation: food-appear .4s ease;
+}
+.food-item:hover {
+  transform: translateY(-3px) scale(1.1);
+  box-shadow: var(--shadow);
+  border-color: var(--accent);
+}
+.food-item:active { transform: scale(.95); }
+.food-item .food-count {
+  position: absolute; top: -4px; right: -4px;
+  background: var(--accent); color: white;
+  font-size: 9px; font-weight: 700;
+  padding: 1px 5px; border-radius: 8px;
+  min-width: 14px; text-align: center;
+}
+.food-item.legendary {
+  background: linear-gradient(135deg, #FEFCBF, #FAF5FF);
+  border-color: #FBD38D;
+  box-shadow: 0 0 10px rgba(251,211,141,.3);
+  animation: food-appear .4s ease, golden-glow 2s ease-in-out infinite;
+}
+@keyframes food-appear {
+  from { transform: scale(0) rotate(180deg); opacity: 0; }
+  to { transform: scale(1) rotate(0); opacity: 1; }
+}
+@keyframes golden-glow {
+  0%,100% { box-shadow: 0 0 10px rgba(251,211,141,.3); }
+  50% { box-shadow: 0 0 18px rgba(251,211,141,.6); }
+}
+.food-empty { color: var(--text-faint); font-size: 12px; text-align: center; width: 100%; padding: 10px; }
+
+.feed-particle {
+  position: absolute; font-size: 22px;
+  pointer-events: none; z-index: 10;
+  animation: feed-fly .8s ease-in forwards;
+}
+@keyframes feed-fly {
+  0% { transform: translate(0,0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--tx),var(--ty)) scale(.3); opacity: 0; }
+}
+.sparkle {
+  position: absolute; pointer-events: none; z-index: 10;
+  animation: sparkle-burst .6s ease-out forwards;
+}
+@keyframes sparkle-burst {
+  0% { transform: scale(0) rotate(0); opacity: 1; }
+  50% { transform: scale(1.5) rotate(180deg); opacity: 1; }
+  100% { transform: scale(0) rotate(360deg); opacity: 0; }
+}
+
+/* ===== Modal ===== */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(85,60,96,.4);
+  backdrop-filter: blur(8px);
+  display: none;
+  align-items: center; justify-content: center;
+  z-index: 1000; padding: 20px;
+}
+.modal-overlay.active { display: flex; animation: fade-in .3s ease; }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+.modal {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 32px;
+  max-width: 480px; width: 100%;
+  box-shadow: var(--shadow-lg);
+  animation: slide-up .4s cubic-bezier(.4,0,.2,1);
+}
+@keyframes slide-up {
+  from { transform: translateY(40px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.modal h2 { font-size: 26px; text-align: center; margin-bottom: 4px; }
+.modal .subtitle { text-align: center; color: var(--text-dim); font-size: 13px; margin-bottom: 20px; }
+.modal-score { text-align: center; margin-bottom: 20px; }
+.modal-score .score-ring { width: 130px; height: 130px; margin: 0 auto 10px; position: relative; }
+.modal-score .score-num {
+  font-size: 44px; font-weight: 800;
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.modal-score .score-label { font-size: 13px; color: var(--text-dim); }
+.modal-stats { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; margin-bottom: 20px; }
+.modal-stat { background: var(--bg-soft); border-radius: var(--radius-sm); padding: 12px; text-align: center; }
+.modal-stat .val { font-size: 22px; font-weight: 800; }
+.modal-stat .lbl { font-size: 11px; color: var(--text-dim); margin-top: 3px; }
+.modal-fb-list { margin-bottom: 16px; }
+.modal-fb-list h4 { font-size: 13px; color: var(--text-dim); margin-bottom: 8px; }
+.modal-fb-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 7px 12px; background: var(--bg-soft);
+  border-radius: var(--radius-sm); margin-bottom: 5px; font-size: 13px;
+}
+.modal-fb-item .word { font-weight: 700; }
+.modal-fb-item .cnt {
+  background: var(--danger); color: white;
+  padding: 2px 10px; border-radius: 20px; font-size: 12px;
+}
+.reward-section {
+  margin-bottom: 16px; padding: 14px;
+  background: linear-gradient(135deg, var(--accent-light), var(--accent-2-light));
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm); text-align: center;
+}
+.reward-section h4 { font-size: 14px; margin-bottom: 8px; color: var(--accent); }
+.reward-items { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+.reward-item { display: flex; flex-direction: column; align-items: center; gap: 3px; animation: food-appear .5s ease; }
+.reward-item .emoji { font-size: 32px; }
+.reward-item .label { font-size: 10px; color: var(--text-dim); }
+.modal-actions { display: flex; gap: 10px; }
+.btn {
+  flex: 1; padding: 12px; border: none;
+  border-radius: var(--radius-sm); font-size: 14px;
+  font-weight: 700; font-family: inherit; cursor: pointer;
+  transition: var(--transition);
+}
+.btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: white; }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(246,135,179,.3); }
+.btn-secondary { background: var(--bg-soft); color: var(--text); border: 1px solid var(--border); }
+.btn-secondary:hover { background: white; }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 20px; left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: white; border: 1px solid var(--accent);
+  color: var(--text);
+  padding: 12px 24px; border-radius: 30px;
+  font-size: 13px; font-weight: 600;
+  box-shadow: var(--shadow-lg); z-index: 2000;
+  transition: transform .4s cubic-bezier(.4,0,.2,1);
+  pointer-events: none;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* Filler flash */
+.filler-flash {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: 3px; background: var(--danger);
+  z-index: 999; opacity: 0;
+  transition: opacity .15s ease;
+}
+.filler-flash.active { opacity: 1; }
+
+/* Responsive */
+@media (max-width: 600px) {
+  .logo h1 { font-size: 18px; }
+  .timer { font-size: 20px; }
+  .stat-value { font-size: 18px; }
+  .modal { padding: 24px; }
+  .modal h2 { font-size: 22px; }
+}
+</style>
+</head>
+<body>
+<div class="filler-flash" id="fillerFlash"></div>
+<div id="app">
+  <div class="workbench">
+
+    <!-- ===== Left Sidebar ===== -->
+    <aside class="sidebar-left">
+      <div class="logo">
+        <div class="logo-icon">⭐</div>
+        <div>
+          <h1>Speech<span>Star</span></h1>
+          <p>Crush those filler words!</p>
+        </div>
+      </div>
+
+      <div class="section-label">Speaker & Language</div>
+      <div class="select-row">
+        <select class="profile-select" id="profileSelect" title="Choose speaker"></select>
+        <select class="lang-select" id="langSelect" title="Choose language">
+          <option value="en">English</option>
+          <option value="zh">中文</option>
+          <option value="fr">Français</option>
+        </select>
+      </div>
+
+      <div class="topic-header-row">
+        <div class="section-label" id="topicHeader">Pick a topic</div>
+        <button class="shuffle-btn" id="shuffleBtn" onclick="renderTopics(true)"><span class="shuffle-icon">🔄</span> <span id="shuffleLabel">Shuffle</span></button>
+      </div>
+      <div class="topic-chips" id="topicSuggestions"></div>
+      <input type="text" class="topic-custom" id="customTopic" placeholder="...or type your own topic">
+
+      <div class="section-label">Quick Tip</div>
+      <div class="tip-box" id="tipText">Press the mic and start talking!</div>
+
+      <div class="section-label">Record</div>
+      <div class="mic-row">
+        <button class="mic-btn" id="micBtn" title="Start / Stop">🎤</button>
+        <div class="mic-info">
+          <div class="label" id="micLabel">Tap to start</div>
+          <div class="status" id="micStatus">Ready when you are</div>
+        </div>
+        <div class="timer" id="timer">00:00</div>
+      </div>
+
+      <div class="section-label">Live Stats</div>
+      <div class="stats-grid">
+        <div class="stat-box" id="statFillers">
+          <div class="stat-value danger" id="fillerCount">0</div>
+          <div class="stat-label">Filler Words</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="fillerRate">0.0</div>
+          <div class="stat-label">Per Minute</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="wordCount">0</div>
+          <div class="stat-label">Words Spoken</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="wpm">0</div>
+          <div class="stat-label">Words / Min</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ===== Main Area ===== -->
+    <main class="main-area">
+      <!-- Transcript -->
+      <div class="card transcript-card">
+        <h3>🗣️ Live Transcript <span class="live-dot" id="liveDot"></span></h3>
+        <div class="transcript-text" id="transcript">
+          <span class="transcript-placeholder">Your speech will appear here in real time. Filler words will be highlighted. Let's go! 🚀</span>
+        </div>
+      </div>
+
+      <!-- Bottom grid: Bunny + Stats -->
+      <div class="bottom-grid">
+        <!-- Bunny -->
+        <div class="card bunny-card">
+          <h3>🐰 Your Bunny Buddy</h3>
+          <div class="bunny-scene" id="bunnyScene">
+            <img class="bunny-img" id="bunnyImg" src="A_super_cute_cartoon_bunny_cha_2026-07-30T00-42-23.png" alt="Bunny">
+          </div>
+          <div class="happiness-bar" id="happinessBar">
+            <span class="happiness-heart">💛</span>
+            <span class="happiness-heart">🤍</span>
+            <span class="happiness-heart">🤍</span>
+            <span class="happiness-heart">🤍</span>
+            <span class="happiness-heart">🤍</span>
+            <span class="happiness-label" id="happinessLabel">Happy</span>
+          </div>
+          <div class="bunny-status" id="bunnyStatus">Complete a session to earn food! 🎯</div>
+          <div class="food-inventory" id="foodInventory">
+            <div class="food-empty">No food yet — finish a practice to earn some! 🥕</div>
+          </div>
+        </div>
+
+        <!-- Right side: Filler breakdown + Progress + Badges -->
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card">
+            <h3>📊 Filler Word Tracker</h3>
+            <div class="filler-breakdown" id="fillerBreakdown">
+              <div class="filler-empty">Start speaking to see your filler words</div>
+            </div>
+          </div>
+          <div class="card">
+            <h3>📈 Your Progress</h3>
+            <div class="progress-chart" id="progressChart">
+              <div class="filler-empty" style="width:100%;">Complete a session to see progress</div>
+            </div>
+          </div>
+          <div class="card">
+            <h3>🏆 Badges</h3>
+            <div class="badges" id="badges"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+  </div>
+</div>
+
+<!-- Session Summary Modal -->
+<div class="modal-overlay" id="summaryModal">
+  <div class="modal">
+    <h2 id="modalTitle">Great job! 🎉</h2>
+    <p class="subtitle" id="modalSubtitle">Here's how you did</p>
+    <div class="modal-score">
+      <div class="score-ring" id="scoreRing">
+        <svg width="130" height="130" viewBox="0 0 140 140">
+          <circle cx="70" cy="70" r="60" fill="none" stroke="#FCE7F3" stroke-width="10"/>
+          <circle cx="70" cy="70" r="60" fill="none" stroke="url(#grad)" stroke-width="10"
+            stroke-linecap="round" stroke-dasharray="377" stroke-dashoffset="377"
+            id="scoreCircle" transform="rotate(-90 70 70)"/>
+          <defs>
+            <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#F687B3"/>
+              <stop offset="100%" stop-color="#C4B5FD"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div class="score-num" id="modalScore">0</div>
+      </div>
+      <div class="score-label" id="modalScoreLabel">Filler-free score</div>
+    </div>
+    <div class="modal-stats">
+      <div class="modal-stat"><div class="val" id="modalDuration">0s</div><div class="lbl">Speaking Time</div></div>
+      <div class="modal-stat"><div class="val" id="modalFillers">0</div><div class="lbl">Filler Words</div></div>
+      <div class="modal-stat"><div class="val" id="modalRate">0.0</div><div class="lbl">Fillers / Min</div></div>
+      <div class="modal-stat"><div class="val" id="modalWords">0</div><div class="lbl">Total Words</div></div>
+    </div>
+    <div class="modal-fb-list" id="modalFbList"><h4>Top filler words used:</h4></div>
+    <div id="modalRewards" style="display:none;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="modalCloseBtn">Close</button>
+      <button class="btn btn-primary" id="modalRetryBtn">Try Again 🔁</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   SPEECH STAR — Filler Word Trainer
+   ============================================================ */
+
+/* ===== Filler Word Databases ===== */
+const FILLER_WORDS = {
+  en: [
+    { word: 'like', emoji: '😬' },
+    { word: 'um', emoji: '😬' },
+    { word: 'uh', emoji: '😬' },
+    { word: 'uhh', emoji: '😬' },
+    { word: 'umm', emoji: '😬' },
+    { word: 'er', emoji: '😬' },
+    { word: 'ah', emoji: '😬' },
+    { word: 'you know', emoji: '😬' },
+    { word: 'i mean', emoji: '😬' },
+    { word: 'basically', emoji: '😬' },
+    { word: 'actually', emoji: '😬' },
+    { word: 'literally', emoji: '😬' },
+    { word: 'so yeah', emoji: '😬' },
+    { word: 'right', emoji: '😬' },
+    { word: 'okay so', emoji: '😬' },
+    { word: 'and stuff', emoji: '😬' },
+    { word: 'or whatever', emoji: '😬' },
+    { word: 'sort of', emoji: '😬' },
+    { word: 'kind of', emoji: '😬' },
+    { word: 'i guess', emoji: '😬' },
+  ],
+  zh: [
+    { word: '然后', emoji: '😬' },
+    { word: '那个', emoji: '😬' },
+    { word: '那个那个', emoji: '😬' },
+    { word: '就是', emoji: '😬' },
+    { word: '就是就是', emoji: '😬' },
+    { word: '嗯', emoji: '😬' },
+    { word: '呃', emoji: '😬' },
+    { word: '啊', emoji: '😬' },
+    { word: '这个', emoji: '😬' },
+    { word: '对吧', emoji: '😬' },
+    { word: '怎么说呢', emoji: '😬' },
+    { word: '就是说', emoji: '😬' },
+    { word: '然后呢', emoji: '😬' },
+    { word: '什么的', emoji: '😬' },
+    { word: '之类的', emoji: '😬' },
+    { word: '反正', emoji: '😬' },
+    { word: '其实吧', emoji: '😬' },
+  ],
+  fr: [
+    { word: 'euh', emoji: '😬' },
+    { word: 'genre', emoji: '😬' },
+    { word: 'du coup', emoji: '😬' },
+    { word: 'en fait', emoji: '😬' },
+    { word: 'quoi', emoji: '😬' },
+    { word: 'ben', emoji: '😬' },
+    { word: 'bah', emoji: '😬' },
+    { word: 'donc voila', emoji: '😬' },
+    { word: 'tu vois', emoji: '😬' },
+    { word: 'tu sais', emoji: '😬' },
+    { word: 'je sais pas', emoji: '😬' },
+    { word: 'bref', emoji: '😬' },
+    { word: 'voila', emoji: '😬' },
+    { word: 'enfin', emoji: '😬' },
+    { word: 'c\'est-a-dire', emoji: '😬' },
+    { word: 'machin', emoji: '😬' },
+    { word: 'truc', emoji: '😬' },
+  ]
+};
+
+/* ===== Profile Ages ===== */
+const PROFILE_AGES = { kid1: 13, kid2: 10 };
+
+/* ===== Practice Topics (Age-differentiated) ===== */
+const TOPICS = {
+  en: {
+    13: [
+      'Should schools ban homework? Defend your position',
+      'If you could change one rule at school, what would it be?',
+      'Describe a challenge you overcame and what you learned',
+      'What does success mean to you?',
+      'Should social media have age limits? Explain your reasoning',
+      'If you could have dinner with any historical figure, who and why?',
+      'Describe your dream career and the steps to get there',
+      'What\'s one problem in the world you\'d want to solve?',
+      'Is technology making us more or less connected?',
+      'Describe a book or movie that changed your perspective',
+      'If you were principal for a day, what would you change?',
+      'What skill should every teenager learn? Why?',
+    ],
+    10: [
+      'What\'s your favorite game? Describe how to play it',
+      'If you could have any animal as a pet, what would it be?',
+      'Describe the best day you ever had',
+      'What superpower would you choose and why?',
+      'If you found a magic door, where would it lead?',
+      'Describe your favorite food without saying its name',
+      'What would you do if you were invisible for a day?',
+      'Tell a story about a talking animal',
+      'What\'s the funniest thing that ever happened to you?',
+      'If you could build anything, what would you build?',
+      'Describe your dream birthday party',
+      'What makes you laugh the most?',
+    ],
+  },
+  zh: {
+    13: [
+      '学校应该取消作业吗？请说明你的理由',
+      '如果你能改变学校的一条规则，你会改什么？',
+      '描述一个你克服的挑战以及你学到了什么',
+      '成功对你来说意味着什么？',
+      '你觉得社交媒体应该有年龄限制吗？',
+      '如果你能和任何历史人物共进晚餐，你会选谁？为什么？',
+      '描述你梦想的职业以及实现它的步骤',
+      '世界上有一个问题你想去解决，是什么？',
+      '科技让我们更亲近还是更疏远？',
+      '描述一本改变你看法的书或电影',
+      '如果你当一天校长，你会改变什么？',
+      '你觉得每个青少年都应该学会什么技能？为什么？',
+    ],
+    10: [
+      '你最喜欢的游戏是什么？教大家怎么玩',
+      '如果你能养任何动物当宠物，你会选什么？',
+      '描述你过得最开心的一天',
+      '你想有什么超能力？为什么？',
+      '如果你发现一扇魔法门，门后面是什么？',
+      '描述你最喜欢的食物，但不能说出它的名字',
+      '如果你隐形一天，你会做什么？',
+      '讲一个关于会说话的小动物的故事',
+      '发生在你身上最搞笑的事是什么？',
+      '如果你能造任何东西，你会造什么？',
+      '描述你梦想中的生日派对',
+      '什么事让你笑得最开心？',
+    ],
+  },
+  fr: {
+    13: [
+      'Décris ta famille',
+      'Quels sports aimes-tu ? Pourquoi ?',
+      'Décris ta chambre en détail',
+      'Qu\'est-ce que tu aimes manger ?',
+      'Parle de ton meilleur ami',
+      'Quel est ton film préféré ? Raconte l\'histoire',
+      'Décris ton école',
+      'Que fais-tu le week-end ?',
+      'Parle de ton animal préféré',
+      'Quelle est ta matière préférée ? Pourquoi ?',
+      'Décris une fête que tu aimes',
+      'Que veux-tu faire plus tard ?',
+    ],
+    10: [
+      'Décris ton animal préféré',
+      'Quelle est ta couleur préférée ? Pourquoi ?',
+      'Décris ta chambre',
+      'Qu\'est-ce que tu aimes manger ?',
+      'Parle de ton jeu préféré',
+      'Décris ta famille',
+      'Quel est ton film préféré ?',
+      'Raconte l\'histoire d\'un animal qui parle',
+      'Qu\'est-ce qui te fait rire ?',
+      'Décris une belle journée',
+      'Quel est ton jouet préféré ?',
+      'Décris un ami imaginaire',
+    ],
+  },
+};
+
+/* ===== Tips (Age-differentiated) ===== */
+const TIPS = {
+  en: {
+    13: [
+      '💡 <strong>Tip:</strong> Structure your response: make a point, give an example, then conclude. No fillers needed!',
+      '💡 <strong>Tip:</strong> When transitioning between ideas, use "next" or "another reason" instead of "um" or "like".',
+      '💡 <strong>Tip:</strong> Slow down! A deliberate pace sounds confident — fillers happen when we rush.',
+      '💡 <strong>Tip:</strong> Practice with a timer. Aim for 60-90 seconds of smooth, structured speech.',
+      '💡 <strong>Tip:</strong> Instead of "like", try "for example", "such as", or "in other words".',
+      '💡 <strong>Tip:</strong> Record yourself daily. You\'ll see improvement faster than you think!',
+      '💡 <strong>Tip:</strong> A 2-second pause sounds thoughtful. "Ummmm" sounds unprepared. Choose the pause.',
+    ],
+    10: [
+      '💡 <strong>Tip:</strong> Take a deep breath before you start. You\'ve got this! 😊',
+      '💡 <strong>Tip:</strong> When you want to say "um", just stop and smile. Silence is okay!',
+      '💡 <strong>Tip:</strong> Talk like you\'re telling a story to a friend. Have fun with it!',
+      '💡 <strong>Tip:</strong> Instead of "like", try saying "for example". It sounds super smart!',
+      '💡 <strong>Tip:</strong> Speak slowly — there\'s no rush. Slow speakers sound more confident!',
+      '💡 <strong>Tip:</strong> Practice every day and you\'ll get better and better! 🌟',
+    ],
+  },
+  zh: {
+    13: [
+      '💡 <strong>提示：</strong>有结构地表达：先说观点，再举例，最后总结。不需要口头禅！',
+      '💡 <strong>提示：</strong>转换话题时用"接下来"、"另一个原因"代替"然后"或"那个"。',
+      '💡 <strong>提示：</strong>放慢语速！有节奏的说话听起来很自信——口头禅往往是因为说太快。',
+      '💡 <strong>提示：</strong>用计时器练习，目标60-90秒流畅有条理的发言。',
+      '💡 <strong>提示：</strong>用"比如说"、"例如"、"换句话说"代替"就是"或"那个"。',
+      '💡 <strong>提示：</strong>每天练习录音，你会看到自己进步得很快！',
+      '💡 <strong>提示：</strong>两秒钟的停顿显得深思熟虑。"嗯嗯嗯"显得没准备好。选停顿。',
+    ],
+    10: [
+      '💡 <strong>提示：</strong>开始前深呼吸一下。你可以的！😊',
+      '💡 <strong>提示：</strong>当你想说"嗯"的时候，停下来笑一下就好。安静也没关系！',
+      '💡 <strong>提示：</strong>就像给好朋友讲故事一样说。开心一点！',
+      '💡 <strong>提示：</strong>用"比如说"代替"就是"，听起来特别厉害！',
+      '💡 <strong>提示：</strong>慢慢说——不用着急。说慢的人听起来更自信！',
+      '💡 <strong>提示：</strong>每天练习，你会越来越棒的！🌟',
+    ],
+  },
+  fr: {
+    13: [
+      '💡 <strong>Astuce :</strong> Pense en français avant de parler. Pas besoin de traduire !',
+      '💡 <strong>Astuce :</strong> Parle lentement. C\'est plus facile et plus clair.',
+      '💡 <strong>Astuce :</strong> Au lieu de "euh", fais une petite pause. C\'est normal !',
+      '💡 <strong>Astuce :</strong> Utilise des mots simples. Pas besoin de mots compliqués !',
+      '💡 <strong>Astuce :</strong> Au lieu de "genre", dis "par exemple".',
+      '💡 <strong>Astuce :</strong> Respire et souris. Tu peux le faire !',
+      '💡 <strong>Astuce :</strong> Pratique un peu chaque jour. Tu vas progresser !',
+    ],
+    10: [
+      '💡 <strong>Astuce :</strong> Respire bien avant de commencer. Tu peux le faire ! 😊',
+      '💡 <strong>Astuce :</strong> Quand tu hésites, arrête-toi et souris. C\'est ok !',
+      '💡 <strong>Astuce :</strong> Parle comme à un ami. Amuse-toi !',
+      '💡 <strong>Astuce :</strong> Au lieu de "euh", fais silence. C\'est bien !',
+      '💡 <strong>Astuce :</strong> Parle doucement. Pas vite !',
+      '💡 <strong>Astuce :</strong> Pratique chaque jour. Tu seras de mieux en mieux ! 🌟',
+    ],
+  },
+};
+
+/* ===== Badge Definitions ===== */
+const BADGES = [
+  { id: 'first_session', icon: '🌟', name: 'First Try', cond: s => s.totalSessions >= 1 },
+  { id: 'no_fillers', icon: '🎯', name: 'Zero Fillers', cond: s => s.bestFillers === 0 },
+  { id: 'under_2', icon: '💎', name: 'Diamond Speech', cond: s => s.bestRate <= 2 && s.bestRate > 0 },
+  { id: 'streak_3', icon: '🔥', name: '3 Sessions', cond: s => s.totalSessions >= 3 },
+  { id: 'streak_5', icon: '⚡', name: '5 Sessions', cond: s => s.totalSessions >= 5 },
+  { id: 'long_speech', icon: '⏱️', name: 'Marathon', cond: s => s.bestDuration >= 120 },
+  { id: 'improver', icon: '📈', name: 'Improver', cond: s => s.improved },
+  { id: 'polyglot', icon: '🌍', name: 'Polyglot', cond: s => s.languagesUsed && s.languagesUsed.length >= 2 },
+  { id: 'polyglot3', icon: '🏆', name: 'Trilingual', cond: s => s.languagesUsed && s.languagesUsed.length >= 3 },
+];
+
+/* ===== Bunny Food Types ===== */
+const FOOD_TYPES = {
+  carrot:     { emoji: '🥕', name: { en: 'Carrot', zh: '胡萝卜', fr: 'Carotte' }, happiness: 1, rarity: 'common' },
+  apple:      { emoji: '🍎', name: { en: 'Apple', zh: '苹果', fr: 'Pomme' }, happiness: 1, rarity: 'common' },
+  lettuce:    { emoji: '🥬', name: { en: 'Lettuce', zh: '生菜', fr: 'Salade' }, happiness: 1, rarity: 'common' },
+  strawberry: { emoji: '🍓', name: { en: 'Strawberry', zh: '草莓', fr: 'Fraise' }, happiness: 2, rarity: 'rare' },
+  banana:     { emoji: '🍌', name: { en: 'Banana', zh: '香蕉', fr: 'Banane' }, happiness: 2, rarity: 'rare' },
+  golden:     { emoji: '🌟', name: { en: 'Golden Carrot', zh: '金胡萝卜', fr: 'Carotte Doree' }, happiness: 3, rarity: 'legendary' },
+};
+
+/* Bunny status messages */
+const BUNNY_STATUS = {
+  en: {
+    hungry: 'I\'m hungry... complete a session to earn food! 🥕',
+    hasFood: 'Tap the food to feed me! 🐰',
+    eating: 'Nom nom nom! So yummy! 😋',
+    happy: 'I\'m so happy! Thank you! 💕',
+    veryHappy: 'I love you so much! You\'re the best! 🥰',
+    full: 'I\'m so full and happy! 🤗',
+  },
+  zh: {
+    hungry: '我饿了... 完成练习就能获得食物哦！🥕',
+    hasFood: '点食物喂我吧！🐰',
+    eating: '好吃好吃！真香！😋',
+    happy: '我好开心！谢谢你！💕',
+    veryHappy: '我最喜欢你了！你最好了！🥰',
+    full: '我吃得好饱好开心！🤗',
+  },
+  fr: {
+    hungry: 'J\'ai faim... fais une session pour gagner de la nourriture ! 🥕',
+    hasFood: 'Clique sur la nourriture pour me nourrir ! 🐰',
+    eating: 'Miam miam ! C\'est delicieux ! 😋',
+    happy: 'Je suis si heureux ! Merci ! 💕',
+    veryHappy: 'Je t\'aime tellement ! Tu es le meilleur ! 🥰',
+    full: 'Je suis plein et heureux ! 🤗',
+  },
+};
+const SR_LANG = { en: 'en-US', zh: 'zh-CN', fr: 'fr-FR' };
+
+/* ===== State ===== */
+let state = {
+  lang: 'en',
+  profile: 'kid1',
+  currentTopic: '',
+  isRecording: false,
+  isPaused: false,
+  startTime: 0,
+  elapsed: 0,
+  timerInterval: null,
+  transcript: '',
+  interimText: '',
+  fillerCounts: {},
+  totalFillers: 0,
+  totalWords: 0,
+  recognition: null,
+  continuousMode: true,
+};
+
+/* ===== Profile data (persisted) ===== */
+function loadProfileData(profile) {
+  const raw = localStorage.getItem(`speechstar_${profile}`);
+  if (raw) { try { return JSON.parse(raw); } catch(e) {} }
+  return { totalSessions: 0, bestRate: Infinity, bestFillers: Infinity, bestDuration: 0, bestScore: 0, history: [], fillerStats: {}, languagesUsed: [], improved: false };
+}
+function saveProfileData(profile, data) {
+  localStorage.setItem(`speechstar_${profile}`, JSON.stringify(data));
+}
+
+/* ===== DOM References ===== */
+const $ = id => document.getElementById(id);
+const micBtn = $('micBtn');
+const micLabel = $('micLabel');
+const micStatus = $('micStatus');
+const timerEl = $('timer');
+const transcriptEl = $('transcript');
+const fillerCountEl = $('fillerCount');
+const fillerRateEl = $('fillerRate');
+const wordCountEl = $('wordCount');
+const wpmEl = $('wpm');
+const fillerBreakdownEl = $('fillerBreakdown');
+const progressChartEl = $('progressChart');
+const badgesEl = $('badges');
+const topicSuggestionsEl = $('topicSuggestions');
+const customTopicInput = $('customTopic');
+const tipText = $('tipText');
+const liveDot = $('liveDot');
+const statFillers = $('statFillers');
+const fillerFlash = $('fillerFlash');
+const langSelect = $('langSelect');
+const profileSelect = $('profileSelect');
+const bunnyImg = $('bunnyImg');
+const bunnyScene = $('bunnyScene');
+const happinessBar = $('happinessBar');
+const happinessLabel = $('happinessLabel');
+const bunnyStatusEl = $('bunnyStatus');
+const foodInventoryEl = $('foodInventory');
+
+/* ===== Initialize ===== */
+function init() {
+  loadProfileNames();
+  profileSelect.addEventListener('change', () => {
+    if (profileSelect.value === '__rename__') { handleRename(); return; }
+    state.profile = profileSelect.value;
+    renderTopics(); renderTip(); renderProgressChart(); renderBadges(); renderBunny();
+    showToast(`Switched to ${getProfileDisplayName(state.profile)}`);
+  });
+  langSelect.addEventListener('change', () => {
+    state.lang = langSelect.value;
+    renderTopics(); renderTip(); renderFillerBreakdown();
+    if (!state.isRecording) { transcriptEl.innerHTML = `<span class="transcript-placeholder">${getPlaceholder()}</span>`; }
+  });
+  micBtn.addEventListener('click', toggleRecording);
+  customTopicInput.addEventListener('input', () => {
+    state.currentTopic = customTopicInput.value;
+    document.querySelectorAll('.topic-chip').forEach(c => c.classList.remove('active'));
+  });
+  $('modalCloseBtn').addEventListener('click', closeSummary);
+  $('modalRetryBtn').addEventListener('click', () => { closeSummary(); setTimeout(() => toggleRecording(), 300); });
+  renderTopics(); renderTip(); renderFillerBreakdown(); renderProgressChart(); renderBadges(); renderBunny();
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    showToast('⚠️ Speech recognition not supported. Use Chrome or Edge browser.');
+    micBtn.disabled = true; micBtn.style.opacity = '0.5';
+    micLabel.textContent = 'Not supported'; micStatus.textContent = 'Try Chrome or Edge';
+  }
+}
+
+/* ===== Profile Names ===== */
+function loadProfileNames() {
+  const raw = localStorage.getItem('speechstar_profiles');
+  if (!raw) { saveProfileNames({ kid1: 'Kid 1 (13 yrs)', kid2: 'Kid 2 (10 yrs)' }); return; }
+  try {
+    const names = JSON.parse(raw);
+    profileSelect.innerHTML = '';
+    Object.entries(names).forEach(([key, name]) => {
+      const opt = document.createElement('option');
+      opt.value = key; opt.textContent = name;
+      profileSelect.appendChild(opt);
+    });
+    const renameOpt = document.createElement('option');
+    renameOpt.value = '__rename__'; renameOpt.textContent = '✏️ Edit names...';
+    profileSelect.appendChild(renameOpt);
+  } catch(e) {}
+}
+function saveProfileNames(names) { localStorage.setItem('speechstar_profiles', JSON.stringify(names)); loadProfileNames(); }
+function getProfileDisplayName(key) {
+  const raw = localStorage.getItem('speechstar_profiles');
+  if (raw) { try { const names = JSON.parse(raw); return names[key] || key; } catch(e) {} }
+  return key;
+}
+
+/* ===== Get Current Age ===== */
+function getAge() { return PROFILE_AGES[state.profile] || 10; }
+
+/* ===== Render Topics ===== */
+function renderTopics(isShuffle) {
+  const age = getAge();
+  const allTopics = (TOPICS[state.lang] && TOPICS[state.lang][age]) || TOPICS.en[age] || TOPICS.en[10];
+
+  // Shuffle and pick 6 random topics each time
+  const shuffled = [...allTopics].sort(() => Math.random() - 0.5);
+  const displayCount = Math.min(6, shuffled.length);
+  const topics = shuffled.slice(0, displayCount);
+
+  topicSuggestionsEl.innerHTML = '';
+  topics.forEach(topic => {
+    const chip = document.createElement('button');
+    chip.className = 'topic-chip'; chip.textContent = topic;
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.topic-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active'); state.currentTopic = topic; customTopicInput.value = '';
+    });
+    topicSuggestionsEl.appendChild(chip);
+  });
+  const headerLabels = { en: `Pick a topic (Age ${age})`, zh: `选一个话题（${age}岁）`, fr: `Choisis un sujet (Âge ${age})` };
+  const topicHeader = $('topicHeader');
+  if (topicHeader) topicHeader.textContent = headerLabels[state.lang] || headerLabels.en;
+
+  // Update shuffle button label
+  const shuffleLabels = { en: 'Shuffle', zh: '换一批', fr: 'Mélanger' };
+  const sl = $('shuffleLabel');
+  if (sl) sl.textContent = shuffleLabels[state.lang] || shuffleLabels.en;
+
+  // Spin animation
+  if (isShuffle) {
+    const btn = $('shuffleBtn');
+    if (btn) { btn.classList.add('spinning'); setTimeout(() => btn.classList.remove('spinning'), 400); }
+  }
+}
+
+/* ===== Render Tip ===== */
+function renderTip() {
+  const age = getAge();
+  const tips = (TIPS[state.lang] && TIPS[state.lang][age]) || TIPS.en[age] || TIPS.en[10];
+  tipText.innerHTML = tips[Math.floor(Math.random() * tips.length)];
+}
+
+/* ===== Get Placeholder ===== */
+function getPlaceholder() {
+  const p = { en: 'Your speech will appear here in real time. Filler words will be highlighted. Let\'s go! 🚀', zh: '你的讲话会实时显示在这里。口头禅会用红色标出。开始吧！🚀', fr: 'Ton discours apparaitra ici en temps reel. Les mots de remplissage seront surlignes. C\'est parti ! 🚀' };
+  return p[state.lang] || p.en;
+}
+
+/* ===== Toggle Recording ===== */
+function toggleRecording() { if (state.isRecording) { stopRecording(); } else { startRecording(); } }
+
+/* ===== Start Recording ===== */
+function startRecording() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) { showToast('⚠️ Speech recognition not supported. Use Chrome or Edge.'); return; }
+  if (profileSelect.value === '__rename__') { handleRename(); return; }
+  state.profile = profileSelect.value;
+  state.recognition = new SpeechRecognition();
+  state.recognition.lang = SR_LANG[state.lang];
+  state.recognition.continuous = true;
+  state.recognition.interimResults = true;
+  state.recognition.maxAlternatives = 1;
+  state.transcript = ''; state.interimText = ''; state.fillerCounts = {};
+  state.totalFillers = 0; state.totalWords = 0; state.elapsed = 0; state.startTime = Date.now();
+  state.recognition.onstart = () => {
+    state.isRecording = true;
+    micBtn.classList.add('recording'); micBtn.textContent = '⏹';
+    micLabel.textContent = 'Recording...';
+    micStatus.textContent = state.currentTopic ? `Topic: ${truncate(state.currentTopic, 30)}` : 'Speak naturally!';
+    liveDot.classList.add('active'); transcriptEl.innerHTML = '';
+    state.timerInterval = setInterval(updateTimer, 100); renderTip();
+  };
+  state.recognition.onresult = (event) => {
+    let interim = '', final = '';
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      const transcript = event.results[i][0].transcript;
+      if (event.results[i].isFinal) { final += transcript + ' '; } else { interim += transcript; }
+    }
+    if (final) {
+      state.transcript += final;
+      const newFillers = countFillers(final);
+      Object.entries(newFillers).forEach(([word, count]) => {
+        state.fillerCounts[word] = (state.fillerCounts[word] || 0) + count;
+        state.totalFillers += count;
+      });
+      state.totalWords += final.trim().split(/\s+/).filter(w => w.length > 0).length;
+      if (Object.keys(newFillers).length > 0) { flashFiller(); }
+    }
+    state.interimText = interim;
+    renderTranscript(); updateLiveStats(); renderFillerBreakdown();
+  };
+  state.recognition.onerror = (event) => {
+    if (event.error === 'no-speech') { micStatus.textContent = 'No speech detected, still listening...'; }
+    else if (event.error === 'not-allowed') { showToast('⚠️ Please allow microphone access.'); stopRecording(); }
+    else if (event.error === 'network') { showToast('⚠️ Network error.'); stopRecording(); }
+  };
+  state.recognition.onend = () => {
+    if (state.isRecording && state.continuousMode) { try { state.recognition.start(); } catch(e) {} }
+  };
+  try { state.recognition.start(); } catch(e) { showToast('⚠️ Could not start microphone.'); }
+}
+
+/* ===== Stop Recording ===== */
+function stopRecording() {
+  state.isRecording = false; state.continuousMode = false;
+  if (state.recognition) { try { state.recognition.stop(); } catch(e) {} }
+  clearInterval(state.timerInterval);
+  micBtn.classList.remove('recording', 'paused'); micBtn.textContent = '🎤';
+  micLabel.textContent = 'Tap to start'; micStatus.textContent = 'Ready when you are';
+  liveDot.classList.remove('active');
+  const durationSec = Math.max(state.elapsed / 1000, 1);
+  const durationMin = durationSec / 60;
+  const rate = state.totalFillers / durationMin;
+  const score = calculateScore(rate, state.totalFillers, state.totalWords);
+  const data = loadProfileData(state.profile);
+  data.totalSessions++;
+  if (rate < data.bestRate) { data.bestRate = rate; data.improved = data.totalSessions > 1; }
+  if (state.totalFillers < data.bestFillers) data.bestFillers = state.totalFillers;
+  if (durationSec > data.bestDuration) data.bestDuration = durationSec;
+  if (score > data.bestScore) data.bestScore = score;
+  if (!data.languagesUsed) data.languagesUsed = [];
+  if (!data.languagesUsed.includes(state.lang)) data.languagesUsed.push(state.lang);
+  Object.entries(state.fillerCounts).forEach(([word, count]) => { data.fillerStats[word] = (data.fillerStats[word] || 0) + count; });
+  data.history.push({ date: Date.now(), lang: state.lang, duration: durationSec, fillers: state.totalFillers, words: state.totalWords, rate: rate, score: score, topic: state.currentTopic || '(free talk)' });
+  if (data.history.length > 20) data.history = data.history.slice(-20);
+  saveProfileData(state.profile, data);
+  const foodRewards = generateFoodRewards(score);
+  addFoodToBunny(foodRewards);
+  showSummary(durationSec, rate, score, foodRewards);
+  renderProgressChart(); renderBadges(); renderBunny();
+  state.continuousMode = true;
+}
+
+/* ===== Count Fillers ===== */
+function countFillers(text) {
+  const fillers = FILLER_WORDS[state.lang];
+  const counts = {};
+  const lowerText = ' ' + text.toLowerCase() + ' ';
+  fillers.forEach(f => {
+    const word = f.word.toLowerCase();
+    let regex;
+    if (word.includes(' ')) { regex = new RegExp(escapeRegex(word), 'gi'); }
+    else if (/^[\u4e00-\u9fa5]/.test(word)) { regex = new RegExp(escapeRegex(word), 'g'); }
+    else { regex = new RegExp('\\b' + escapeRegex(word) + '\\b', 'gi'); }
+    const matches = lowerText.match(regex);
+    if (matches) { counts[word] = matches.length; }
+  });
+  return counts;
+}
+function escapeRegex(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+/* ===== Render Transcript ===== */
+function renderTranscript() {
+  let html = highlightFillers(state.transcript);
+  if (state.interimText) { html += `<span style="color:var(--text-faint);font-style:italic;">${escapeHtml(state.interimText)}</span>`; }
+  if (!html) { html = `<span class="transcript-placeholder">${getPlaceholder()}</span>`; }
+  transcriptEl.innerHTML = html;
+  transcriptEl.scrollTop = transcriptEl.scrollHeight;
+}
+function highlightFillers(text) {
+  if (!text) return '';
+  const fillers = FILLER_WORDS[state.lang];
+  let result = escapeHtml(text);
+  const sorted = [...fillers].sort((a, b) => b.word.length - a.word.length);
+  sorted.forEach(f => {
+    const word = f.word;
+    let regex;
+    if (word.includes(' ')) { regex = new RegExp(escapeRegex(word), 'gi'); }
+    else if (/^[\u4e00-\u9fa5]/.test(word)) { regex = new RegExp(escapeRegex(word), 'g'); }
+    else { regex = new RegExp('\\b' + escapeRegex(word) + '\\b', 'gi'); }
+    result = result.replace(regex, (match) => `<span class="filler-hit">${match}</span>`);
+  });
+  return result;
+}
+function escapeHtml(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+/* ===== Update Live Stats ===== */
+function updateLiveStats() {
+  fillerCountEl.textContent = state.totalFillers;
+  wordCountEl.textContent = state.totalWords;
+  const minutes = Math.max(state.elapsed / 60000, 0.01);
+  const rate = state.totalFillers / minutes;
+  fillerRateEl.textContent = rate.toFixed(1);
+  fillerRateEl.className = 'stat-value';
+  if (rate <= 2) fillerRateEl.classList.add('good');
+  else if (rate <= 5) fillerRateEl.classList.add('warn');
+  else fillerRateEl.classList.add('danger');
+  wpmEl.textContent = Math.round(state.totalWords / minutes);
+  if (state.totalFillers > 0) { statFillers.classList.add('flash'); setTimeout(() => statFillers.classList.remove('flash'), 300); }
+}
+
+/* ===== Update Timer ===== */
+function updateTimer() {
+  state.elapsed = Date.now() - state.startTime;
+  const totalSec = Math.floor(state.elapsed / 1000);
+  timerEl.textContent = `${String(Math.floor(totalSec / 60)).padStart(2, '0')}:${String(totalSec % 60).padStart(2, '0')}`;
+}
+
+/* ===== Render Filler Breakdown ===== */
+function renderFillerBreakdown() {
+  const entries = Object.entries(state.fillerCounts).filter(([_, c]) => c > 0);
+  if (entries.length === 0 && !state.isRecording) { fillerBreakdownEl.innerHTML = `<div class="filler-empty">Start speaking to see your filler words</div>`; return; }
+  if (entries.length === 0) { fillerBreakdownEl.innerHTML = `<div class="filler-empty">No fillers yet! Keep it up! 🌟</div>`; return; }
+  entries.sort((a, b) => b[1] - a[1]);
+  fillerBreakdownEl.innerHTML = entries.map(([word, count]) => `<div class="filler-row"><span class="word">"${word}"</span><span class="count">${count}</span></div>`).join('');
+}
+
+/* ===== Render Progress Chart ===== */
+function renderProgressChart() {
+  const data = loadProfileData(state.profile);
+  const history = data.history || [];
+  if (history.length === 0) { progressChartEl.innerHTML = `<div class="filler-empty" style="width:100%;">Complete a session to see progress</div>`; return; }
+  const recent = history.slice(-8);
+  const maxRate = Math.max(...recent.map(s => s.rate), 5);
+  progressChartEl.innerHTML = recent.map((s) => {
+    const heightPct = (s.rate / maxRate) * 100;
+    let color = s.rate <= 2 ? '#68D391' : s.rate <= 5 ? '#FBD38D' : '#FC8181';
+    const date = new Date(s.date);
+    const label = `${date.getMonth()+1}/${date.getDate()}`;
+    const langIcon = s.lang === 'en' ? '🇬🇧' : s.lang === 'zh' ? '🇨🇳' : '🇫🇷';
+    return `<div class="bar-col" title="${langIcon} ${label}: ${s.rate.toFixed(1)}/min"><div class="bar-value">${s.rate.toFixed(1)}</div><div class="bar" style="height:${heightPct}%;background:${color};"></div><div class="bar-label">${label}</div></div>`;
+  }).join('');
+}
+
+/* ===== Render Badges ===== */
+function renderBadges() {
+  const data = loadProfileData(state.profile);
+  badgesEl.innerHTML = BADGES.map(badge => {
+    const earned = badge.cond(data);
+    return `<div class="badge ${earned ? 'earned' : ''}" title="${badge.name}"><div class="badge-icon">${badge.icon}</div><div class="badge-name">${badge.name}</div></div>`;
+  }).join('');
+}
+
+/* ===== Calculate Score ===== */
+function calculateScore(rate, fillers, words) {
+  let score;
+  if (rate <= 1) score = 95 + Math.random() * 5;
+  else if (rate <= 2) score = 88 + (2 - rate) * 4;
+  else if (rate <= 5) score = 70 + (5 - rate) * 6;
+  else if (rate <= 10) score = 40 + (10 - rate) * 6;
+  else if (rate <= 20) score = 20 + (20 - rate) * 2;
+  else score = Math.max(5, 20 - (rate - 20));
+  if (words > 100) score += 3;
+  if (words > 200) score += 2;
+  return Math.min(100, Math.max(0, Math.round(score)));
+}
+
+/* ===== Show Summary Modal ===== */
+function showSummary(durationSec, rate, score, foodRewards) {
+  $('modalScore').textContent = score;
+  $('modalDuration').textContent = formatDuration(durationSec);
+  $('modalFillers').textContent = state.totalFillers;
+  $('modalRate').textContent = rate.toFixed(1);
+  $('modalWords').textContent = state.totalWords;
+  $('modalScore').style.color = score >= 80 ? 'var(--success)' : score >= 50 ? '#D69E2E' : 'var(--danger)';
+  const circle = $('scoreCircle');
+  const circumference = 2 * Math.PI * 60;
+  const offset = circumference - (score / 100) * circumference;
+  setTimeout(() => { circle.style.transition = 'stroke-dashoffset 1s ease'; circle.style.strokeDashoffset = offset; }, 200);
+  const titles = {
+    en: [{ min: 90, title: 'Amazing! 🌟', sub: 'You\'re a speech star!' }, { min: 75, title: 'Great job! 🎉', sub: 'Keep practicing!' }, { min: 50, title: 'Good effort! 👍', sub: 'You\'re getting better!' }, { min: 0, title: 'Keep trying! 💪', sub: 'Practice makes perfect!' }],
+    zh: [{ min: 90, title: '太棒了！🌟', sub: '你是演讲之星！' }, { min: 75, title: '做得好！🎉', sub: '继续加油！' }, { min: 50, title: '不错的尝试！👍', sub: '你在进步！' }, { min: 0, title: '继续努力！💪', sub: '熟能生巧！' }],
+    fr: [{ min: 90, title: 'Incroyable ! 🌟', sub: 'Tu es une star !' }, { min: 75, title: 'Bravo ! 🎉', sub: 'Continue !' }, { min: 50, title: 'Bon effort ! 👍', sub: 'Tu progresses !' }, { min: 0, title: 'Continue ! 💪', sub: 'Pratique rend parfait !' }],
+  };
+  const titleSet = titles[state.lang] || titles.en;
+  const tInfo = titleSet.find(t => score >= t.min) || titleSet[titleSet.length - 1];
+  $('modalTitle').textContent = tInfo.title;
+  $('modalSubtitle').textContent = tInfo.sub;
+  const entries = Object.entries(state.fillerCounts).filter(([_, c]) => c > 0).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const fbListEl = $('modalFbList');
+  if (entries.length === 0) {
+    const noFillerMsg = { en: '<h4>🎉 Zero filler words! Perfect speech!</h4>', zh: '<h4>🎉 零口头禅！完美的演讲！</h4>', fr: '<h4>🎉 Zero mot de remplissage ! Parfait !</h4>' };
+    fbListEl.innerHTML = noFillerMsg[state.lang] || noFillerMsg.en;
+  } else {
+    const header = { en: 'Top filler words used:', zh: '最常用的口头禅：', fr: 'Mots de remplissage les plus utilises :' };
+    fbListEl.innerHTML = `<h4>${header[state.lang] || header.en}</h4>` + entries.map(([word, count]) => `<div class="modal-fb-item"><span class="word">"${word}"</span><span class="cnt">${count}×</span></div>`).join('');
+  }
+  $('summaryModal').classList.add('active');
+  const rewardEl = $('modalRewards');
+  if (foodRewards && foodRewards.length > 0) {
+    const rewardHeader = { en: '🐰 Bunny Food Earned!', zh: '🐰 获得兔子食物！', fr: '🐰 Nourriture gagnee !' };
+    let rewardHtml = `<div class="reward-section"><h4>${rewardHeader[state.lang] || rewardHeader.en}</h4><div class="reward-items">`;
+    foodRewards.forEach(f => {
+      const food = FOOD_TYPES[f]; const name = food.name[state.lang] || food.name.en;
+      rewardHtml += `<div class="reward-item"><span class="emoji">${food.emoji}</span><span class="label">${name}</span></div>`;
+    });
+    const feedTip = { en: 'Go feed your bunny! →', zh: '去喂你的小兔子吧！→', fr: 'Va nourrir ton lapin ! →' };
+    rewardHtml += `</div><p style="margin-top:8px;font-size:12px;color:var(--text-dim);">${feedTip[state.lang] || feedTip.en}</p></div>`;
+    rewardEl.innerHTML = rewardHtml; rewardEl.style.display = 'block';
+  } else { rewardEl.style.display = 'none'; }
+}
+
+/* ===== Close Summary ===== */
+function closeSummary() {
+  $('summaryModal').classList.remove('active');
+  $('scoreCircle').style.transition = 'none';
+  $('scoreCircle').style.strokeDashoffset = '377';
+}
+
+/* ===== Bunny Reward System ===== */
+function loadBunnyData(profile) {
+  const raw = localStorage.getItem(`speechstar_bunny_${profile}`);
+  if (raw) { try { return JSON.parse(raw); } catch(e) {} }
+  return { happiness: 3, totalFeeds: 0, foodInventory: {}, lastInteraction: Date.now() };
+}
+function saveBunnyData(profile, data) { data.lastInteraction = Date.now(); localStorage.setItem(`speechstar_bunny_${profile}`, JSON.stringify(data)); }
+function generateFoodRewards(score) {
+  const rewards = [];
+  let count = score >= 90 ? 3 : score >= 75 ? 2 : 1;
+  for (let i = 0; i < count; i++) {
+    const roll = Math.random();
+    if (score >= 90 && roll < 0.15) rewards.push('golden');
+    else if (score >= 75 && roll < 0.30) rewards.push('strawberry');
+    else if (roll < 0.15) rewards.push('strawberry');
+    else if (roll < 0.30) rewards.push('banana');
+    else { const commons = ['carrot', 'apple', 'lettuce']; rewards.push(commons[Math.floor(Math.random() * 3)]); }
+  }
+  return rewards;
+}
+function addFoodToBunny(foods) {
+  if (!foods || foods.length === 0) return;
+  const data = loadBunnyData(state.profile);
+  if (!data.foodInventory) data.foodInventory = {};
+  foods.forEach(f => { data.foodInventory[f] = (data.foodInventory[f] || 0) + 1; });
+  saveBunnyData(state.profile, data);
+}
+function renderBunny() {
+  const data = loadBunnyData(state.profile);
+  const msgs = BUNNY_STATUS[state.lang] || BUNNY_STATUS.en;
+  const hearts = happinessBar.querySelectorAll('.happiness-heart');
+  const filledCount = Math.ceil(data.happiness / 2);
+  hearts.forEach((h, i) => {
+    if (i < filledCount) { h.classList.add('filled'); h.textContent = '💛'; }
+    else { h.classList.remove('filled'); h.textContent = '🤍'; }
+  });
+  const labels = { en: ['Sad','Okay','Content','Happy','Very Happy','Joyful!'], zh: ['难过','还行','满足','开心','很开心','超级开心！'], fr: ['Triste','OK','Content','Heureux','Très heureux','Rayonnant !'] };
+  const labelSet = labels[state.lang] || labels.en;
+  happinessLabel.textContent = labelSet[Math.min(Math.floor(data.happiness / 2), labelSet.length - 1)];
+  const hasFood = data.foodInventory && Object.values(data.foodInventory).some(c => c > 0);
+  if (data.happiness >= 9) bunnyStatusEl.textContent = msgs.full;
+  else if (data.happiness >= 7) bunnyStatusEl.textContent = msgs.veryHappy;
+  else if (hasFood) bunnyStatusEl.textContent = msgs.hasFood;
+  else bunnyStatusEl.textContent = msgs.hungry;
+  renderFoodInventory(data);
+}
+function renderFoodInventory(data) {
+  const inventory = data.foodInventory || {};
+  const entries = Object.entries(inventory).filter(([_, c]) => c > 0);
+  if (entries.length === 0) {
+    const emptyMsg = { en: 'No food yet — finish a practice! 🥕', zh: '还没有食物 — 完成练习就能获得！🥕', fr: 'Pas de nourriture — fais une session ! 🥕' };
+    foodInventoryEl.innerHTML = `<div class="food-empty">${emptyMsg[state.lang] || emptyMsg.en}</div>`;
+    return;
+  }
+  entries.sort((a, b) => {
+    const ra = FOOD_TYPES[a[0]]?.rarity === 'legendary' ? 0 : FOOD_TYPES[a[0]]?.rarity === 'rare' ? 1 : 2;
+    const rb = FOOD_TYPES[b[0]]?.rarity === 'legendary' ? 0 : FOOD_TYPES[b[0]]?.rarity === 'rare' ? 1 : 2;
+    return ra - rb;
+  });
+  foodInventoryEl.innerHTML = entries.map(([type, count]) => {
+    const food = FOOD_TYPES[type]; if (!food) return '';
+    const legendaryClass = food.rarity === 'legendary' ? 'legendary' : '';
+    return `<div class="food-item ${legendaryClass}" data-food="${type}" title="${food.name[state.lang] || food.name.en}">${food.emoji}${count > 1 ? `<span class="food-count">${count}</span>` : ''}</div>`;
+  }).join('');
+  foodInventoryEl.querySelectorAll('.food-item').forEach(el => {
+    el.addEventListener('click', () => { feedBunny(el.dataset.food, el); });
+  });
+}
+function feedBunny(foodType, foodEl) {
+  const data = loadBunnyData(state.profile);
+  if (!data.foodInventory[foodType] || data.foodInventory[foodType] <= 0) return;
+  const food = FOOD_TYPES[foodType]; if (!food) return;
+  data.foodInventory[foodType]--;
+  if (data.foodInventory[foodType] <= 0) delete data.foodInventory[foodType];
+  data.happiness = Math.min(10, data.happiness + food.happiness);
+  data.totalFeeds++; saveBunnyData(state.profile, data);
+  const foodRect = foodEl.getBoundingClientRect();
+  const bunnyRect = bunnyImg.getBoundingClientRect();
+  const sceneRect = bunnyScene.getBoundingClientRect();
+  const particle = document.createElement('div');
+  particle.className = 'feed-particle'; particle.textContent = food.emoji;
+  particle.style.left = (foodRect.left - sceneRect.left + foodRect.width / 2 - 12) + 'px';
+  particle.style.top = (foodRect.top - sceneRect.top + foodRect.height / 2 - 12) + 'px';
+  particle.style.setProperty('--tx', (bunnyRect.left - foodRect.left + bunnyRect.width / 2 - foodRect.width / 2) + 'px');
+  particle.style.setProperty('--ty', (bunnyRect.top - foodRect.top + bunnyRect.height / 2 - foodRect.height / 2) + 'px');
+  bunnyScene.appendChild(particle);
+  setTimeout(() => particle.remove(), 800);
+  bunnyImg.classList.add('eating');
+  bunnyStatusEl.textContent = (BUNNY_STATUS[state.lang] || BUNNY_STATUS.en).eating;
+  setTimeout(() => {
+    for (let i = 0; i < 6; i++) {
+      const sparkle = document.createElement('div');
+      sparkle.className = 'sparkle';
+      sparkle.textContent = ['✨', '⭐', '💫', '🌟'][Math.floor(Math.random() * 4)];
+      sparkle.style.left = (bunnyRect.left - sceneRect.left + bunnyRect.width / 2 + (Math.random() - 0.5) * 80) + 'px';
+      sparkle.style.top = (bunnyRect.top - sceneRect.top + 20 + (Math.random() - 0.5) * 40) + 'px';
+      sparkle.style.fontSize = (12 + Math.random() * 12) + 'px';
+      sparkle.style.animationDelay = (i * 0.08) + 's';
+      bunnyScene.appendChild(sparkle);
+      setTimeout(() => sparkle.remove(), 700 + i * 80);
+    }
+  }, 400);
+  setTimeout(() => { bunnyImg.classList.remove('eating'); bunnyImg.classList.add('happy'); setTimeout(() => bunnyImg.classList.remove('happy'), 600); }, 1500);
+  setTimeout(() => {
+    renderBunny();
+    if (data.happiness >= 10) {
+      const fullMsg = { en: '🐰 Your bunny is full and super happy! 💕', zh: '🐰 你的小兔子吃饱啦，超级开心！💕', fr: '🐰 Ton lapin est plein et heureux ! 💕' };
+      showToast(fullMsg[state.lang] || fullMsg.en);
+    }
+  }, 2200);
+}
+
+/* ===== Flash & Toast ===== */
+function flashFiller() { fillerFlash.classList.add('active'); setTimeout(() => fillerFlash.classList.remove('active'), 200); }
+function showToast(msg) { const toast = $('toast'); toast.textContent = msg; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 3000); }
+
+/* ===== Handle Rename ===== */
+function handleRename() {
+  const data1 = localStorage.getItem('speechstar_profiles');
+  let names = { kid1: 'Kid 1 (13 yrs)', kid2: 'Kid 2 (10 yrs)' };
+  if (data1) { try { names = JSON.parse(data1); } catch(e) {} }
+  const name1 = prompt('Name for Profile 1 (13 yrs):', names.kid1 || 'Kid 1');
+  if (name1 !== null) names.kid1 = name1;
+  const name2 = prompt('Name for Profile 2 (10 yrs):', names.kid2 || 'Kid 2');
+  if (name2 !== null) names.kid2 = name2;
+  saveProfileNames(names); profileSelect.value = 'kid1'; state.profile = 'kid1';
+  renderTopics(); renderTip(); showToast('Names updated! ✏️');
+}
+
+/* ===== Helpers ===== */
+function truncate(s, n) { return s.length > n ? s.substring(0, n) + '...' : s; }
+function formatDuration(sec) { const m = Math.floor(sec / 60); const s = Math.round(sec % 60); return m > 0 ? `${m}m ${s}s` : `${s}s`; }
+
+/* ===== Boot ===== */
+init();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('sw.js').catch(function(e) {
+      console.log('SW registration failed:', e);
+    });
+  });
+}
+</script>
+</body>
+</html>
