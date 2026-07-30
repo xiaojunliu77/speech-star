@@ -1011,6 +1011,28 @@ function saveProfileData(profile, data) {
 
 /* ===== DOM References ===== */
 const $ = id => document.getElementById(id);
+
+/* ===== Version Check (force reload on update) ===== */
+(function() {
+  var APP_VERSION = '2026-07-30-v3';
+  try {
+    var lastVersion = localStorage.getItem('speechstar_version');
+    if (lastVersion && lastVersion !== APP_VERSION) {
+      localStorage.setItem('speechstar_version', APP_VERSION);
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(regs) {
+          regs.forEach(function(r) { r.unregister(); });
+        });
+      }
+      if ('caches' in window) {
+        caches.keys().then(function(names) { names.forEach(function(n) { caches.delete(n); }); });
+      }
+      location.reload();
+      return;
+    }
+    localStorage.setItem('speechstar_version', APP_VERSION);
+  } catch(e) {}
+})();
 const micBtn = $('micBtn');
 const micLabel = $('micLabel');
 const micStatus = $('micStatus');

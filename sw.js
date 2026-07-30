@@ -25,6 +25,11 @@ self.addEventListener('activate', function(e) {
         names.filter(function(n) { return n !== CACHE_NAME; })
           .map(function(n) { return caches.delete(n); })
       );
+    }).then(function() {
+      /* Force all open tabs to reload so they pick up the new version */
+      return self.clients.matchAll({ type: 'window' }).then(function(clients) {
+        clients.forEach(function(client) { client.navigate(client.url); });
+      });
     })
   );
   self.clients.claim();
