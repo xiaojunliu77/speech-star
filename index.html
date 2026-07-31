@@ -595,7 +595,11 @@ body {
 
       <div class="section-label">Speaker & Language</div>
       <div class="select-row">
-        <select class="profile-select" id="profileSelect" title="Choose speaker"></select>
+        <select class="profile-select" id="profileSelect" title="Choose speaker">
+          <option value="kid1">Kid 1 (13 yrs)</option>
+          <option value="kid2">Kid 2 (10 yrs)</option>
+          <option value="__rename__">✏️ Edit names...</option>
+        </select>
         <select class="lang-select" id="langSelect" title="Choose language">
           <option value="en">English</option>
           <option value="zh">中文</option>
@@ -608,7 +612,16 @@ body {
         <button class="shuffle-btn" id="shuffleBtn" onclick="renderTopics(true)"><span class="shuffle-icon">🔄</span> <span id="shuffleLabel">Shuffle</span></button>
       </div>
       <div class="topic-chips" id="topicSuggestions">
-        <button class="topic-chip" onclick="this.parentElement.innerHTML='Loading...'">Loading topics...</button>
+        <button class="topic-chip" onclick="selectTopic(this)">Should schools ban homework? Defend your position</button>
+        <button class="topic-chip" onclick="selectTopic(this)">If you could change one rule at school, what would it be?</button>
+        <button class="topic-chip" onclick="selectTopic(this)">Describe a challenge you overcame</button>
+        <button class="topic-chip" onclick="selectTopic(this)">What does success mean to you?</button>
+        <button class="topic-chip" onclick="selectTopic(this)">Should social media have age limits?</button>
+        <button class="topic-chip" onclick="selectTopic(this)">Describe your dream career</button>
+        <button class="topic-chip" onclick="selectTopic(this)">What's a problem in the world you'd solve?</button>
+        <button class="topic-chip" onclick="selectTopic(this)">Is technology making us more connected?</button>
+        <button class="topic-chip" onclick="selectTopic(this)">If you were principal for a day, what would you change?</button>
+        <button class="topic-chip" onclick="selectTopic(this)">What skill should every teenager learn?</button>
       </div>
       <input type="text" class="topic-custom" id="customTopic" placeholder="...or type your own topic">
 
@@ -1016,6 +1029,17 @@ function saveProfileData(profile, data) {
 
 /* ===== DOM References ===== */
 const $ = id => document.getElementById(id);
+
+/* ===== Static topic selection (works without full JS init) ===== */
+function selectTopic(btn) {
+  try {
+    document.querySelectorAll('.topic-chip').forEach(function(c) { c.classList.remove('active'); });
+    btn.classList.add('active');
+    var input = document.getElementById('customTopic');
+    if (input) input.value = '';
+    if (typeof state !== 'undefined') { state.currentTopic = btn.textContent; }
+  } catch(e) { console.error('selectTopic error:', e); }
+}
 
 /* ===== Global error handler — show errors on page ===== */
 window.addEventListener('error', function(e) {
