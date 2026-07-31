@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Speech Star — Filler Word Trainer</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#F687B3">
@@ -604,7 +607,9 @@ body {
         <div class="section-label" id="topicHeader">Pick a topic</div>
         <button class="shuffle-btn" id="shuffleBtn" onclick="renderTopics(true)"><span class="shuffle-icon">🔄</span> <span id="shuffleLabel">Shuffle</span></button>
       </div>
-      <div class="topic-chips" id="topicSuggestions"></div>
+      <div class="topic-chips" id="topicSuggestions">
+        <button class="topic-chip" onclick="this.parentElement.innerHTML='Loading...'">Loading topics...</button>
+      </div>
       <input type="text" class="topic-custom" id="customTopic" placeholder="...or type your own topic">
 
       <div class="section-label">Quick Tip</div>
@@ -1012,31 +1017,26 @@ function saveProfileData(profile, data) {
 /* ===== DOM References ===== */
 const $ = id => document.getElementById(id);
 
-/* ===== Version Check (force reload on update) ===== */
-(function() {
-  var APP_VERSION = '2026-07-30-v5';
-  var stored = null;
-  try { stored = localStorage.getItem('speechstar_version'); } catch(e) {}
-  if (stored === APP_VERSION) { return; }
-  try { localStorage.setItem('speechstar_version', APP_VERSION); } catch(e) {}
-  /* Version mismatch or first visit — clear all caches and SW, then reload */
-  var cleanup = Promise.resolve();
-  if ('serviceWorker' in navigator) {
-    cleanup = cleanup.then(function() {
-      return navigator.serviceWorker.getRegistrations().then(function(regs) {
-        return Promise.all(regs.map(function(r) { return r.unregister(); }));
-      });
-    });
-  }
-  if ('caches' in window) {
-    cleanup = cleanup.then(function() {
-      return caches.keys().then(function(names) {
-        return Promise.all(names.map(function(n) { return caches.delete(n); }));
-      });
-    });
-  }
-  cleanup.then(function() { location.reload(); });
-})();
+/* ===== Global error handler — show errors on page ===== */
+window.addEventListener('error', function(e) {
+  try {
+    var d = document.createElement('div');
+    d.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#e91e63;color:white;padding:8px;font-size:12px;z-index:99999;';
+    d.textContent = 'JS Error: ' + (e.message || 'unknown');
+    document.body.appendChild(d);
+    setTimeout(function() { d.remove(); }, 8000);
+  } catch(e2) {}
+});
+
+/* ===== Unregister any old Service Workers (one-time cleanup) ===== */
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(function(regs) {
+    regs.forEach(function(r) { r.unregister(); });
+  }).catch(function() {});
+}
+if ('caches' in window) {
+  caches.keys().then(function(names) { names.forEach(function(n) { caches.delete(n); }); }).catch(function() {});
+}
 const micBtn = $('micBtn');
 const micLabel = $('micLabel');
 const micStatus = $('micStatus');
@@ -1061,7 +1061,20 @@ const profileSelect = $('profileSelect');
 /* ===== Initialize ===== */
 function init() {
   /* Render topics FIRST so they appear even if something else fails */
-  try { renderTopics(); renderTip(); renderFillerBreakdown(); renderProgressChart(); renderBadges(); } catch(e) { console.error('Render error:', e); }
+  try { 
+    renderTopics(); 
+  } catch(e) { 
+    console.error('renderTopics error:', e);
+    /* Show error visibly on page */
+    try {
+      var el = document.getElementById('topicSuggestions');
+      if (el) el.innerHTML = '<div style="color:red;padding:10px;">Error loading topics: ' + e.message + '</div>';
+    } catch(e2) {}
+  }
+  try { renderTip(); } catch(e) { console.error('renderTip error:', e); }
+  try { renderFillerBreakdown(); } catch(e) { console.error('renderFillerBreakdown error:', e); }
+  try { renderProgressChart(); } catch(e) { console.error('renderProgressChart error:', e); }
+  try { renderBadges(); } catch(e) { console.error('renderBadges error:', e); }
   /* Load profile names with safe localStorage handling */
   try { loadProfileNames(); } catch(e) { console.error('Profile load error:', e); }
   try {
@@ -1457,15 +1470,6 @@ function formatDuration(sec) { const m = Math.floor(sec / 60); const s = Math.ro
 /* ===== Boot ===== */
 init();
 </script>
-<script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function() {
-    navigator.serviceWorker.register('sw.js').catch(function(e) {
-      console.log('SW registration failed:', e);
-    });
-  });
-}
-</script>
-<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;opacity:0.6;pointer-events:none;z-index:9999;">v3</div>
+<div id="versionBadge" style="position:fixed;bottom:8px;right:8px;font-size:14px;color:#e91e63;font-weight:bold;opacity:0.8;pointer-events:none;z-index:9999;background:white;padding:2px 8px;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,0.2);">v6</div>
 </body>
 </html>
