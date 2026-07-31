@@ -1014,7 +1014,7 @@ const $ = id => document.getElementById(id);
 
 /* ===== Version Check (force reload on update) ===== */
 (function() {
-  var APP_VERSION = '2026-07-30-v4';
+  var APP_VERSION = '2026-07-30-v5';
   var stored = null;
   try { stored = localStorage.getItem('speechstar_version'); } catch(e) {}
   if (stored === APP_VERSION) { return; }
@@ -1466,5 +1466,6 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
+<div style="position:fixed;bottom:4px;right:8px;font-size:10px;color:#ccc;opacity:0.6;pointer-events:none;z-index:9999;">v3</div>
 </body>
 </html>
