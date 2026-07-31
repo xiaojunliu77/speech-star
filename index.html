@@ -1014,24 +1014,28 @@ const $ = id => document.getElementById(id);
 
 /* ===== Version Check (force reload on update) ===== */
 (function() {
-  var APP_VERSION = '2026-07-30-v3';
-  try {
-    var lastVersion = localStorage.getItem('speechstar_version');
-    if (lastVersion && lastVersion !== APP_VERSION) {
-      localStorage.setItem('speechstar_version', APP_VERSION);
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(function(regs) {
-          regs.forEach(function(r) { r.unregister(); });
-        });
-      }
-      if ('caches' in window) {
-        caches.keys().then(function(names) { names.forEach(function(n) { caches.delete(n); }); });
-      }
-      location.reload();
-      return;
-    }
-    localStorage.setItem('speechstar_version', APP_VERSION);
-  } catch(e) {}
+  var APP_VERSION = '2026-07-30-v4';
+  var stored = null;
+  try { stored = localStorage.getItem('speechstar_version'); } catch(e) {}
+  if (stored === APP_VERSION) { return; }
+  try { localStorage.setItem('speechstar_version', APP_VERSION); } catch(e) {}
+  /* Version mismatch or first visit — clear all caches and SW, then reload */
+  var cleanup = Promise.resolve();
+  if ('serviceWorker' in navigator) {
+    cleanup = cleanup.then(function() {
+      return navigator.serviceWorker.getRegistrations().then(function(regs) {
+        return Promise.all(regs.map(function(r) { return r.unregister(); }));
+      });
+    });
+  }
+  if ('caches' in window) {
+    cleanup = cleanup.then(function() {
+      return caches.keys().then(function(names) {
+        return Promise.all(names.map(function(n) { return caches.delete(n); }));
+      });
+    });
+  }
+  cleanup.then(function() { location.reload(); });
 })();
 const micBtn = $('micBtn');
 const micLabel = $('micLabel');
